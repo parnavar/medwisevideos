@@ -1,488 +1,818 @@
 <!DOCTYPE html>
-<html lang="en" class="h-full">
+<html lang="en" class="h-full scroll-smooth">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>Circumvallate Papilla | Virtual Histology Microscope</title>
+  <title>Medwise BioScope | Premium Virtual Microscope</title>
+  
   <script src="https://cdn.tailwindcss.com/3.4.17"></script>
   <script src="https://cdn.jsdelivr.net/npm/lucide@0.263.0/dist/umd/lucide.min.js"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Plus Jakarta Sans', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          }
+        }
+      }
+    }
+  </script>
+
   <style>
-    * { user-select: none; }
-    body { background: #05070a; font-family: 'Inter', sans-serif; }
-    .microscope-eyepiece {
-      position: relative;
-      border-radius: 50%;
-      background: #0a0c12;
-      box-shadow: 0 25px 40px -15px rgba(0,0,0,0.8), inset 0 0 0 6px #2a2e3a, inset 0 0 0 12px #101218, 0 0 0 4px #1e2a3a, 0 20px 35px -8px black;
-      transition: all 0.2s;
-      overflow: hidden;
+    * { 
+      user-select: none;
+      -webkit-user-drag: none;
     }
-    .glass-reflection {
-      position: absolute;
-      inset: 0;
-      border-radius: 50%;
-      background: radial-gradient(circle at 25% 25%, rgba(255,255,255,0.12) 0%, rgba(255,255,255,0.02) 60%, transparent 90%);
-      pointer-events: none;
-      z-index: 12;
+    body { 
+      background: #030712; 
+      color: #f3f4f6;
     }
-    .vignette-ring {
-      position: absolute;
-      inset: 0;
-      border-radius: 50%;
-      background: radial-gradient(circle, transparent 40%, rgba(0,0,0,0.65) 85%, #000000 100%);
-      pointer-events: none;
-      z-index: 10;
-      mix-blend-mode: multiply;
+    .glass-base {
+      background: rgba(17, 24, 39, 0.7);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.06);
     }
-    .control-panel-modern {
-      background: rgba(12, 16, 24, 0.75);
-      backdrop-filter: blur(12px);
-      border: 1px solid rgba(60, 130, 200, 0.25);
-      border-radius: 20px;
-      transition: all 0.2s;
+    .lens-viewport {
+      box-shadow: 
+        0 0 0 8px #111827,
+        0 0 0 12px rgba(56, 189, 248, 0.15),
+        0 25px 60px -15px rgba(0, 0, 0, 0.9),
+        inset 0 0 50px rgba(0, 0, 0, 0.95);
     }
-    .slider-style {
+    .custom-scroll::-webkit-scrollbar {
+      width: 5px;
+      height: 5px;
+    }
+    .custom-scroll::-webkit-scrollbar-track {
+      background: rgba(0, 0, 0, 0.2);
+    }
+    .custom-scroll::-webkit-scrollbar-thumb {
+      background: rgba(156, 163, 175, 0.2);
+      border-radius: 99px;
+    }
+    .custom-scroll::-webkit-scrollbar-thumb:hover {
+      background: rgba(56, 189, 248, 0.5);
+    }
+    .range-input {
       -webkit-appearance: none;
-      background: linear-gradient(90deg, #2c5a7a, #5faee3);
-      height: 4px;
-      border-radius: 4px;
+      appearance: none;
+      background: #1f2937;
+      height: 5px;
+      border-radius: 99px;
     }
-    .slider-style::-webkit-slider-thumb {
+    .range-input::-webkit-slider-thumb {
       -webkit-appearance: none;
       width: 14px;
       height: 14px;
-      background: #b0e0ff;
       border-radius: 50%;
+      background: #38bdf8;
       cursor: pointer;
-      box-shadow: 0 0 5px #5faee3;
-      border: none;
-    }
-    .toggle-glow.active {
-      background: rgba(80, 160, 255, 0.2);
-      border-color: #5faee3;
-      box-shadow: 0 0 8px rgba(80, 160, 255, 0.4);
-    }
-    .annotation-badge {
+      box-shadow: 0 0 10px rgba(56, 189, 248, 0.6);
       transition: all 0.15s ease;
     }
-    .annotation-badge.active {
-      background: rgba(80, 160, 255, 0.3) !important;
-      border-left-width: 3px !important;
-      border-left-color: #5faee3 !important;
-      padding-left: 0.75rem !important;
+    .range-input::-webkit-slider-thumb:hover {
+      transform: scale(1.25);
     }
-    .image-container {
-      transform-origin: center center;
-      transition: transform 0.05s linear;
+    @keyframes sweep {
+      0% { transform: translateY(-100%); opacity: 0; }
+      50% { opacity: 0.3; }
+      100% { transform: translateY(100%); opacity: 0; }
     }
-    .info-panel-scroll {
-      scrollbar-width: thin;
-      scrollbar-color: #2c5a7a #121620;
-    }
-    #image-pan-zoom {
-      cursor: grab;
-    }
-    #image-pan-zoom:active {
-      cursor: grabbing;
+    .laser-sweep {
+      animation: sweep 3.5s linear infinite;
+      background: linear-gradient(to bottom, transparent, rgba(56, 189, 248, 0.2), transparent);
     }
   </style>
 </head>
-<body class="h-full overflow-hidden bg-[#05070a] text-[#eef4ff]">
-  <div class="h-full flex flex-col lg:flex-row gap-5 p-4 lg:p-6">
+<body class="h-full overflow-hidden font-sans antialiased text-slate-300">
 
-    <div class="lg:w-72 w-full flex flex-col gap-4 order-3 lg:order-1 overflow-y-auto max-h-[30vh] lg:max-h-full">
-      <div class="control-panel-modern p-5">
+  <header class="h-16 border-b border-gray-800 bg-gray-950/80 backdrop-blur-md flex items-center justify-between px-6 z-50 relative">
+    <div class="flex items-center gap-3">
+      <div class="h-10 w-10 bg-sky-500/10 rounded-xl flex items-center justify-center border border-sky-500/20">
+        <i data-lucide="microscope" class="w-5 h-5 text-sky-400"></i>
+      </div>
+      <div>
+        <h1 class="font-bold tracking-tight text-white text-sm">MEDWISE BIOSCOPE</h1>
+        <p class="text-[11px] text-gray-400 font-mono">WORKSPACE: H&E LINGUAL TISSUE</p>
+      </div>
+    </div>
+
+    <div id="tour-banner" class="hidden md:flex items-center gap-3 bg-sky-950/40 border border-sky-900/60 px-4 py-1.5 rounded-full text-xs transition-all duration-300">
+      <span class="flex h-2 w-2 relative">
+        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-sky-400 opacity-75"></span>
+        <span class="relative inline-flex rounded-full h-2 w-2 bg-sky-500"></span>
+      </span>
+      <span id="tour-step-text" class="text-sky-200 font-medium">Guided Study Mode Active</span>
+      <div class="flex gap-1 ml-2 border-l border-sky-900 pl-2">
+        <button id="prev-tour-btn" class="p-0.5 hover:text-white transition"><i data-lucide="chevron-left" class="w-4 h-4"></i></button>
+        <button id="next-tour-btn" class="p-0.5 hover:text-white transition"><i data-lucide="chevron-right" class="w-4 h-4"></i></button>
+      </div>
+    </div>
+
+    <div class="flex items-center gap-2">
+      <button id="tour-toggle-btn" class="flex items-center gap-1.5 text-xs bg-sky-500/10 text-sky-400 border border-sky-500/20 hover:bg-sky-500/20 px-3 py-1.5 rounded-xl transition duration-150 font-medium">
+        <i data-lucide="compass" class="w-3.5 h-3.5"></i> Start Guided Tour
+      </button>
+      <button id="reset-deck-btn" class="flex items-center gap-1.5 text-xs bg-gray-900 border border-gray-800 hover:border-gray-700 text-gray-300 hover:text-white px-3 py-1.5 rounded-xl transition duration-150">
+        <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i> Reset
+      </button>
+    </div>
+  </header>
+
+  <main class="h-[calc(100vh-64px)] flex flex-col lg:flex-row p-4 gap-4 overflow-hidden">
+    
+    <section class="lg:w-80 w-full flex flex-col gap-4 order-3 lg:order-1 overflow-y-auto max-h-[35vh] lg:max-h-full custom-scroll pr-1">
+      
+      <div class="glass-base rounded-2xl p-4">
+        <div class="flex items-center justify-between mb-3">
+          <div class="flex items-center gap-2">
+            <i data-lucide="disc" class="w-4 h-4 text-sky-400"></i>
+            <h2 class="text-xs font-bold uppercase tracking-wider text-gray-300">Objective Turret Magnification</h2>
+          </div>
+        </div>
+        <div class="grid grid-cols-5 gap-1 bg-gray-950 p-1 rounded-xl border border-gray-800">
+          <button data-zoom-level="0" class="turret-node py-2 text-xs font-mono font-bold rounded-lg text-gray-400 transition hover:text-white">2x</button>
+          <button data-zoom-level="1" class="turret-node py-2 text-xs font-mono font-bold rounded-lg bg-sky-500/10 border border-sky-500/20 text-sky-400">4x</button>
+          <button data-zoom-level="2" class="turret-node py-2 text-xs font-mono font-bold rounded-lg text-gray-400 transition hover:text-white">10x</button>
+          <button data-zoom-level="3" class="turret-node py-2 text-xs font-mono font-bold rounded-lg text-gray-400 transition hover:text-white">20x</button>
+          <button data-zoom-level="4" class="turret-node py-2 text-xs font-mono font-bold rounded-lg text-gray-400 transition hover:text-white">40x</button>
+        </div>
+      </div>
+
+      <div class="glass-base rounded-2xl p-4">
         <div class="flex items-center gap-2 mb-4">
-          <i data-lucide="microscope" class="w-5 h-5 text-[#5faee3]"></i>
-          <h3 class="font-semibold text-sm tracking-wide text-[#b9e2ff]">MICROSCOPE CONTROLS</h3>
+          <i data-lucide="sliders" class="w-4 h-4 text-sky-400"></i>
+          <h2 class="text-xs font-bold uppercase tracking-wider text-gray-300">Optics Adjustment Panel</h2>
         </div>
-        
-        <div class="mb-4">
-          <div class="flex justify-between text-xs text-[#98b9d4] mb-1"><span>Brightness</span><span id="bright-val">100%</span></div>
-          <input type="range" id="bright-slider" min="30" max="200" value="100" class="slider-style w-full">
-        </div>
-        <div class="mb-4">
-          <div class="flex justify-between text-xs text-[#98b9d4] mb-1"><span>Contrast</span><span id="contr-val">100%</span></div>
-          <input type="range" id="contr-slider" min="50" max="180" value="100" class="slider-style w-full">
-        </div>
-        <div class="mb-4">
-          <div class="flex justify-between text-xs text-[#98b9d4] mb-1"><span>Stain Saturation</span><span id="sat-val">100%</span></div>
-          <input type="range" id="sat-slider" min="40" max="200" value="100" class="slider-style w-full">
-        </div>
-        
-        <div class="border-t border-[#1e2a3a] my-3"></div>
-        
-        <div class="flex gap-3 mb-4">
-          <div class="flex-1 bg-black/30 rounded-xl p-2 text-center">
-            <div class="text-[10px] text-[#7aa9c9]">MAGNIFICATION</div>
-            <div class="text-lg font-bold text-[#7bc5ff]" id="mag-label">4x</div>
-            <div class="flex justify-center gap-3 mt-1">
-              <button id="zoom-out-btn" class="bg-[#141c28] hover:bg-[#1f3142] rounded-full w-7 h-7 flex items-center justify-center transition"><i data-lucide="minus" class="w-3.5 h-3.5"></i></button>
-              <button id="zoom-in-btn" class="bg-[#141c28] hover:bg-[#1f3142] rounded-full w-7 h-7 flex items-center justify-center transition"><i data-lucide="plus" class="w-3.5 h-3.5"></i></button>
+        <div class="space-y-3.5">
+          <div>
+            <div class="flex justify-between text-xs font-mono mb-1">
+              <span class="text-gray-400">Microscope Light (Intensity)</span>
+              <span id="label-bright" class="text-sky-400 font-bold">100%</span>
             </div>
+            <input type="range" id="input-bright" min="50" max="170" value="100" class="range-input w-full">
           </div>
-          <div class="flex-1 bg-black/30 rounded-xl p-2 text-center">
-            <div class="text-[10px] text-[#7aa9c9]">MEASURE</div>
-            <div class="text-xs font-mono text-[#bde4ff]" id="measure-status">OFF</div>
-            <button id="measure-mode-btn" class="mt-1 text-[11px] bg-[#1a2533] px-2 py-0.5 rounded-full w-full hover:bg-[#2a3a4a] transition">📏 Ruler</button>
+          <div>
+            <div class="flex justify-between text-xs font-mono mb-1">
+              <span class="text-gray-400">Iris Diaphragm Contrast</span>
+              <span id="label-contr" class="text-sky-400 font-bold">100%</span>
+            </div>
+            <input type="range" id="input-contr" min="60" max="150" value="100" class="range-input w-full">
+          </div>
+          <div>
+            <div class="flex justify-between text-xs font-mono mb-1">
+              <span class="text-gray-400">Stain Saturation</span>
+              <span id="label-sat" class="text-sky-400 font-bold">100%</span>
+            </div>
+            <input type="range" id="input-sat" min="30" max="170" value="100" class="range-input w-full">
           </div>
         </div>
-        
-        <div class="flex gap-3 mb-4">
-          <button id="grid-btn" class="flex-1 flex items-center justify-center gap-1 bg-[#0f141f] border border-[#2c4058] rounded-xl py-2 text-xs transition hover:border-[#5faee3]"><i data-lucide="grid-3x3" class="w-3.5 h-3.5"></i> Grid</button>
-          <button id="snapshot-btn" class="flex-1 flex items-center justify-center gap-1 bg-[#0f141f] border border-[#2c4058] rounded-xl py-2 text-xs transition hover:bg-[#1e2f40]"><i data-lucide="camera" class="w-3.5 h-3.5"></i> Snapshot</button>
-        </div>
-        
-        <div class="text-[10px] text-[#6f8faa] flex justify-between mt-2">
-          <span>🖱️ Drag to pan</span>
-          <span>⚡ Scroll to zoom</span>
+
+        <div class="border-t border-gray-800/80 my-3.5 pt-3.5">
+          <span class="text-[10px] font-mono uppercase tracking-wider text-gray-400 block mb-2">Alternate Lighting Filters</span>
+          <div class="grid grid-cols-3 gap-1">
+            <button id="mode-normal" class="filter-node text-[10px] py-1.5 rounded-lg font-mono bg-sky-500/10 border border-sky-500/30 text-sky-400 font-medium">BRIGHTFIELD</button>
+            <button id="mode-mono" class="filter-node text-[10px] py-1.5 rounded-lg font-mono bg-gray-900 border border-gray-800 text-gray-400 hover:border-gray-700">MONO</button>
+            <button id="mode-fluor" class="filter-node text-[10px] py-1.5 rounded-lg font-mono bg-gray-900 border border-gray-800 text-gray-400 hover:border-gray-700">FLUOR</button>
+          </div>
         </div>
       </div>
-      
-      <div class="control-panel-modern p-5">
+
+      <div class="glass-base rounded-2xl p-4">
         <div class="flex items-center gap-2 mb-3">
-          <i data-lucide="map-pin" class="w-4 h-4 text-[#5faee3]"></i>
-          <h3 class="font-semibold text-sm">HISTOLOGY ANNOTATIONS</h3>
+          <i data-lucide="box" class="w-4 h-4 text-sky-400"></i>
+          <h2 class="text-xs font-bold uppercase tracking-wider text-gray-300">Diagnostic Suite</h2>
         </div>
-        <div class="space-y-2">
-          <button data-anno="tastebuds" class="annotation-badge w-full text-left flex items-center gap-2 px-3 py-2 rounded-xl bg-[#0d1220] border-l-2 border-transparent text-[#bfd9f0] text-xs transition"><span class="w-2.5 h-2.5 rounded-full bg-[#ffbc6e]"></span> Taste Buds (Neuroepithelial)</button>
-          <button data-anno="glands" class="annotation-badge w-full text-left flex items-center gap-2 px-3 py-2 rounded-xl bg-[#0d1220] border-l-2 border-transparent text-[#bfd9f0] text-xs transition"><span class="w-2.5 h-2.5 rounded-full bg-[#b77ee0]"></span> Von Ebner's Glands</button>
-          <button data-anno="trench" class="annotation-badge w-full text-left flex items-center gap-2 px-3 py-2 rounded-xl bg-[#0d1220] border-l-2 border-transparent text-[#bfd9f0] text-xs transition"><span class="w-2.5 h-2.5 rounded-full bg-[#e0a878]"></span> Circumvallate Trench</button>
-          <button data-anno="vessels" class="annotation-badge w-full text-left flex items-center gap-2 px-3 py-2 rounded-xl bg-[#0d1220] border-l-2 border-transparent text-[#bfd9f0] text-xs transition"><span class="w-2.5 h-2.5 rounded-full bg-[#ff7b72]"></span> Capillary Plexus</button>
-          <button data-anno="nerves" class="annotation-badge w-full text-left flex items-center gap-2 px-3 py-2 rounded-xl bg-[#0d1220] border-l-2 border-transparent text-[#bfd9f0] text-xs transition"><span class="w-2.5 h-2.5 rounded-full bg-[#88dd88]"></span> Nerve Fibers (CN IX)</button>
+        <div class="grid grid-cols-2 gap-2">
+          <button id="tool-ruler" class="flex items-center gap-2 text-xs py-2 px-3 rounded-xl border border-gray-800 bg-gray-900/50 hover:bg-gray-900 hover:border-gray-700 text-gray-300 transition">
+            <i data-lucide="ruler" class="w-3.5 h-3.5 text-sky-400"></i>
+            <span>Micron Ruler</span>
+          </button>
+          <button id="tool-counter" class="flex items-center gap-2 text-xs py-2 px-3 rounded-xl border border-gray-800 bg-gray-900/50 hover:bg-gray-900 hover:border-gray-700 text-gray-300 transition">
+            <i data-lucide="plus-circle" class="w-3.5 h-3.5 text-emerald-400"></i>
+            <span>Cell Counter</span>
+          </button>
+          <button id="tool-grid" class="flex items-center gap-2 text-xs py-2 px-3 rounded-xl border border-gray-800 bg-gray-900/50 hover:bg-gray-900 hover:border-gray-700 text-gray-300 transition">
+            <i data-lucide="grid" class="w-3.5 h-3.5 text-amber-400"></i>
+            <span>Reticle Grid</span>
+          </button>
+          <button id="tool-snap" class="flex items-center gap-2 text-xs py-2 px-3 rounded-xl border border-gray-800 bg-gray-900/50 hover:bg-gray-900 hover:border-gray-700 text-gray-300 transition">
+            <i data-lucide="download" class="w-3.5 h-3.5 text-indigo-400"></i>
+            <span>Capture HD</span>
+          </button>
         </div>
-        <div class="mt-3 text-[10px] text-[#5e7e9a] italic">Click annotation → highlight + description</div>
+        <div class="mt-3 bg-gray-950 p-2.5 rounded-xl border border-gray-800 flex items-center justify-between font-mono text-[11px]">
+          <span class="text-gray-500">SUITE OUTPUT:</span>
+          <span id="diagnostic-readout" class="text-gray-300 font-bold">STANDBY</span>
+        </div>
       </div>
-    </div>
+    </section>
 
-    <div class="flex-1 flex flex-col items-center justify-center relative order-1 lg:order-2">
-      <div class="text-center mb-3">
-        <h1 class="text-2xl font-semibold tracking-tight bg-gradient-to-r from-[#9fd4ff] to-[#5faee3] bg-clip-text text-transparent">Circumvallate Papilla</h1>
-        <p class="text-xs text-[#86aac9] mt-0.5">H&E Staining | Virtual Light Microscope</p>
+    <section class="flex-1 flex flex-col items-center justify-center relative order-1 lg:order-2 bg-gray-950/30 rounded-3xl border border-gray-900 p-4">
+      
+      <div class="absolute top-4 left-4 z-30 font-mono text-[10px] text-gray-500 space-y-0.5 hidden sm:block">
+        <div>STAGE CORDS: <span id="hud-coords" class="text-gray-300 font-bold">X: 0, Y: 0</span></div>
+        <div>FIELD DEPTH: <span id="hud-depth" class="text-gray-300 font-bold">1.220 mm</span></div>
+      </div>
+
+      <div class="relative lens-viewport w-[min(73vw,73vh,540px)] h-[min(73vw,73vh,540px)] rounded-full bg-gray-950 transition-all duration-300 overflow-hidden">
+        
+        <div class="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-transparent pointer-events-none z-10"></div>
+        <div id="lens-scan-line" class="absolute inset-0 laser-sweep z-30 pointer-events-none hidden"></div>
+
+        <div id="viewport-trigger" class="absolute inset-0 cursor-grab active:cursor-grabbing">
+          
+          <div id="stage-scaler" class="w-full h-full transform-gpu" style="transform: scale(1) translate(0px, 0px); transform-origin: center center;">
+            <img id="microscope-asset" 
+                 src="https://raw.githubusercontent.com/parnavar/medwisevideos/main/Tongue_histology_05.jpg"
+                 alt="Histology Asset Core Layer"
+                 class="w-full h-full object-cover" 
+                 crossorigin="anonymous">
+          </div>
+          
+        </div>
+
+        <canvas id="reticle-canvas" class="absolute inset-0 w-full h-full pointer-events-none z-20" style="display: none;"></canvas>
+        
+        <div id="floating-pin-target-plane" class="absolute inset-0 pointer-events-none z-25"></div>
+
+        <div id="ruler-target-node" class="absolute rounded-full border border-sky-400 w-8 h-8 pointer-events-none z-30 hidden -translate-x-1/2 -translate-y-1/2 bg-sky-500/10 shadow-[0_0_8px_rgba(56,189,248,0.3)]">
+          <div class="absolute inset-0 m-auto w-1 h-1 bg-sky-400 rounded-full"></div>
+        </div>
       </div>
       
-      <div class="relative microscope-eyepiece w-[min(76vw,76vh,550px)] h-[min(76vw,76vh,550px)]">
-        <div class="glass-reflection"></div>
-        <div class="vignette-ring"></div>
-        
-        <div id="image-pan-zoom" class="absolute inset-0 overflow-hidden rounded-full">
-          <img id="histology-img" 
-               src="https://raw.githubusercontent.com/parnavar/medwisevideos/main/Tongue_histology_05.jpg"
-               alt="Circumvallate papilla micrograph H&E"
-               class="w-full h-full object-cover image-container" 
-               style="transform: scale(1) translate(0px, 0px); filter: brightness(1) contrast(1) saturate(1);"
-               crossorigin="anonymous">
+      <div id="status-hud-alert" class="mt-4 max-w-xl text-center bg-gray-950 border border-gray-800 px-4 py-2 rounded-xl text-xs text-gray-300 shadow-xl transition-all duration-300 flex items-center gap-2">
+        <i data-lucide="help-circle" class="w-4 h-4 text-sky-400 shrink-0"></i>
+        <span id="status-hud-text">Drag inside the viewpoint circle to pan the image, or click points to sample structural dimensions.</span>
+      </div>
+    </section>
+
+    <section class="lg:w-80 w-full order-2 lg:order-3 flex flex-col gap-4 overflow-y-auto pr-1 custom-scroll max-h-[40vh] lg:max-h-full">
+      
+      <div class="glass-base rounded-2xl p-4">
+        <div class="flex items-center gap-2 mb-3">
+          <i data-lucide="map-pin" class="w-4 h-4 text-sky-400"></i>
+          <h2 class="text-xs font-bold uppercase tracking-wider text-gray-300">Anatomical Mapping</h2>
         </div>
-        
-        <canvas id="grid-canvas" class="absolute inset-0 w-full h-full rounded-full pointer-events-none z-20" style="display: none;"></canvas>
-        <div id="measure-crosshair" class="absolute rounded-full border-2 border-[#5faee3] w-8 h-8 pointer-events-none z-30 hidden" style="transform: translate(-50%, -50%); backdrop-filter: blur(2px); background: rgba(95,174,227,0.15);"></div>
+        <div class="space-y-1.5" id="anatomy-deck-container">
+          </div>
       </div>
       
-      <div id="annotation-message" class="mt-4 max-w-md text-center bg-[#0a0f18]/80 backdrop-blur-md rounded-2xl px-4 py-2 border border-[#2a405a] text-sm text-[#cae3ff] transition-all duration-200">
-        🔬 Select any annotation from the left panel to identify histological structures.
-      </div>
-    </div>
-
-    <div class="lg:w-80 w-full order-2 lg:order-3 flex flex-col gap-4 overflow-y-auto pr-1 info-panel-scroll max-h-[45vh] lg:max-h-full">
-      <div class="control-panel-modern p-5">
-        <h2 class="text-md font-bold flex items-center gap-2 text-[#9ad0ff]"><i data-lucide="book-open" class="w-4 h-4"></i> Clinical & Histology Guide</h2>
-        <div class="mt-3 text-xs leading-relaxed text-[#c2d6ec] space-y-2">
-          <p><span class="font-semibold text-[#7bc5ff]">Circumvallate papillae</span> (8–12) form the V-shaped sulcus terminalis. Each papilla is surrounded by a deep trench lined by stratified squamous epithelium containing <span class="text-[#ffbc6e] font-medium">~250 taste buds</span> per papilla.</p>
-          <p>🔬 <strong class="text-[#b77ee0]">Von Ebner's glands</strong> secrete lingual lipase and serous fluid, flushing the trench to renew tastant stimuli.</p>
-          <p>⚡ <strong class="text-[#88dd88]">Glossopharyngeal nerve (CN IX)</strong> innervates vallate papillae, mediating bitter, sour, and umami signals.</p>
-          <div class="bg-[#00000040] rounded-lg p-2 mt-2 text-[10px] font-mono">
-            🧫 H&E stain: Eosinophilic (pink) = epithelium/cytoplasm | Basophilic (purple) = nuclei/taste buds
+      <div class="glass-base rounded-2xl p-4 flex-1">
+        <div class="flex items-center gap-2 mb-2.5">
+          <i data-lucide="info" class="w-4 h-4 text-sky-400"></i>
+          <h2 class="text-xs font-bold uppercase tracking-wider text-gray-300">Structural Synopsis</h2>
+        </div>
+        <div id="synopsis-report-card" class="text-xs leading-relaxed text-gray-400 space-y-3">
+          <p>The <span class="text-sky-400 font-medium">Circumvallate Papilla</span> landscape represents one of the most vital regions of gustatory physiology. Explore the tissue layers to view the layout.</p>
+          <div class="bg-gray-950 p-3 rounded-xl border border-gray-800 text-[11px] space-y-1 font-mono">
+            <div class="flex justify-between"><span class="text-gray-500">Acidophilic structures:</span><span class="text-pink-400">Connective/Muscular</span></div>
+            <div class="flex justify-between"><span class="text-gray-500">Basophilic structures:</span><span class="text-purple-400">Nucleated Layers</span></div>
           </div>
         </div>
       </div>
-      
-      <div class="control-panel-modern p-5">
-        <h3 class="text-sm font-semibold flex items-center gap-1"><i data-lucide="info" class="w-3.5 h-3.5"></i> Interactive Features</h3>
-        <ul class="text-xs space-y-2 mt-3 list-disc pl-4 text-[#b0cbee]">
-          <li><strong>Drag & scroll</strong> – navigate real micrograph like a microscope stage</li>
-          <li><strong>Grid overlay</strong> – measure distances & orientation</li>
-          <li><strong>Ruler tool</strong> – click two points to measure (μm scale)</li>
-          <li><strong>Image filters</strong> – simulate microscope light adjustments</li>
-          <li><strong>Annotations</strong> – highlight taste buds, glands, trench & nerves</li>
-        </ul>
-      </div>
-      
-      <div class="control-panel-modern p-5 text-[11px] text-[#9dbad6]">
-        <i data-lucide="image" class="inline w-3 h-3 mr-1"></i> High-resolution H&E stained section of circumvallate papilla. Source: Medwise Repository
-      </div>
-    </div>
-  </div>
+    </section>
+  </main>
 
   <script>
-    // DOM elements
-    const img = document.getElementById('histology-img');
-    const container = document.getElementById('image-pan-zoom');
-    let scale = 1;
-    let translateX = 0, translateY = 0;
-    let isPanning = false;
-    let startX = 0, startY = 0;
-    let startTranslateX = 0, startTranslateY = 0;
+    // System Pointers Configuration Matrix Map
+    const imgAsset = document.getElementById('microscope-asset');
+    const stageScaler = document.getElementById('stage-scaler');
+    const viewportTrigger = document.getElementById('viewport-trigger');
+    const floatingPinTargetPlane = document.getElementById('floating-pin-target-plane');
+    const diagnosticReadout = document.getElementById('diagnostic-readout');
+    const statusHudText = document.getElementById('status-hud-text');
+    const synopsisReportCard = document.getElementById('synopsis-report-card');
     
-    const zoomLevels = [0.8, 1, 1.5, 2.2, 3.2];
-    const zoomLabels = ['2x', '4x', '10x', '20x', '40x'];
-    let zoomIdx = 1;
+    // Core Parameters Tracker Vector Layout Setup
+    let scale = 1.0;
+    let transX = 0, transY = 0;
+    let isDragging = false;
+    let pointerStartX = 0, pointerStartY = 0;
+    let baseTransX = 0, baseTransY = 0;
+    
+    const zoomScales = [0.6, 1.0, 1.8, 3.2, 5.5];
+    const zoomTextLabels = ['2x', '4x', '10x', '20x', '40x'];
+    let currentZoomIndex = 1;
     
     let brightness = 100, contrast = 100, saturation = 100;
-    let gridActive = false;
-    let measuring = false;
-    let firstPoint = null;
+    let opticalFilter = 'normal';
     
-    // Direct link to raw asset on GitHub to bypass layout interface wrappers
-    const imageUrl = "https://raw.githubusercontent.com/parnavar/medwisevideos/main/Tongue_histology_05.jpg";
-    img.src = imageUrl;
+    let activeSuiteTool = 'none'; // none | ruler | counter
+    let reticleGridActive = false;
+    let measurementAnchorCoords = null;
+    let cellTrackerNodesArray = [];
     
-    function updateImageTransform() {
-      img.style.transform = `translate(${translateX}px, ${translateY}px) scale(${scale})`;
-      img.style.filter = `brightness(${brightness}%) contrast(${contrast}%) saturate(${saturation}%)`;
-      document.getElementById('mag-label').innerHTML = zoomLabels[zoomIdx];
-    }
-    
-    function setZoom(newIdx) {
-      zoomIdx = Math.min(zoomLevels.length-1, Math.max(0, newIdx));
-      scale = zoomLevels[zoomIdx];
-      updateImageTransform();
-    }
-    
-    function startPan(e) {
-      e.preventDefault();
-      isPanning = true;
-      const clientX = e.clientX || (e.touches ? e.touches[0].clientX : 0);
-      const clientY = e.clientY || (e.touches ? e.touches[0].clientY : 0);
-      startX = clientX;
-      startY = clientY;
-      startTranslateX = translateX;
-      startTranslateY = translateY;
-    }
-    
-    function onPanMove(e) {
-      if (!isPanning) return;
-      e.preventDefault();
-      const clientX = e.clientX || (e.touches ? e.touches[0].clientX : 0);
-      const clientY = e.clientY || (e.touches ? e.touches[0].clientY : 0);
-      const dx = clientX - startX;
-      const dy = clientY - startY;
-      translateX = startTranslateX + dx;
-      translateY = startTranslateY + dy;
-      updateImageTransform();
-    }
-    
-    function endPan() {
-      isPanning = false;
-    }
-    
-    function handleWheel(e) {
-      e.preventDefault();
-      const delta = e.deltaY > 0 ? -1 : 1;
-      let newIdx = zoomIdx + delta;
-      if (newIdx >= 0 && newIdx < zoomLevels.length) {
-        setZoom(newIdx);
+    let activeTourSequenceIndex = -1;
+
+    // Structural Tissue Map Coordination Database Data Matrix
+    const histologyStructuresMatrix = {
+      tastebuds: {
+        title: "Taste Buds (Sensory Epithelium)",
+        color: "#fbbd24",
+        zoom: 3.2, tx: -270, ty: 100,
+        pins: [{x: 35, y: 35}, {x: 34, y: 44}, {x: 36, y: 55}, {x: 65, y: 38}, {x: 66, y: 48}],
+        summary: "👅 <strong>Taste Buds:</strong> Oval clusters embedded within the stratified squamous epithelial walls of the trench. They house gustatory receptors linked to neuroepithelial cells. Dissolved tastants enter through the taste pore to trigger depolarization spikes sent along the <strong>Glossopharyngeal Nerve (CN IX)</strong>."
+      },
+      glands: {
+        title: "Von Ebner's Serous Glands",
+        color: "#c084fc",
+        zoom: 1.8, tx: 0, ty: -220,
+        pins: [{x: 20, y: 85}, {x: 50, y: 88}, {x: 80, y: 86}, {x: 38, y: 92}],
+        summary: "🧪 <strong>Von Ebner's Glands:</strong> Serous exocrine salivary glands nestled deep inside the connective tissue lamina propria. They produce a watery secretion that flushes the circumvallate trench, clearing old tastants to prepare the taste buds for new sensory inputs."
+      },
+      trench: {
+        title: "Circumvallate Trench",
+        color: "#38bdf8",
+        zoom: 1.8, tx: 220, ty: 40,
+        pins: [{x: 27, y: 50}, {x: 73, y: 46}],
+        summary: "🌀 <strong>The Crypt Moat:</strong> A deep epithelial groove surrounding the papilla core. It acts as a retention basin where food molecules accumulate in salivary fluids, maximizing exposure to the lateral taste bud arrays."
+      },
+      epithelium: {
+        title: "Stratified Squamous Epithelium",
+        color: "#fb7185",
+        zoom: 1.8, tx: 0, ty: 180,
+        pins: [{x: 50, y: 22}, {x: 20, y: 25}, {x: 80, y: 24}],
+        summary: "🛡️ <strong>Protective Epithelial Lining:</strong> A non-keratinized multi-layered barrier engineered to shield the tongue core against mechanical abrasion and enzymatic degradation during mastication."
       }
-    }
-    
-    container.addEventListener('mousedown', startPan);
-    window.addEventListener('mousemove', onPanMove);
-    window.addEventListener('mouseup', endPan);
-    container.addEventListener('touchstart', startPan, {passive: false});
-    window.addEventListener('touchmove', onPanMove, {passive: false});
-    window.addEventListener('touchend', endPan);
-    container.addEventListener('wheel', handleWheel, {passive: false});
-    
-    // UI Controls
-    document.getElementById('zoom-in-btn').addEventListener('click', () => setZoom(zoomIdx+1));
-    document.getElementById('zoom-out-btn').addEventListener('click', () => setZoom(zoomIdx-1));
-    
-    const brightSlider = document.getElementById('bright-slider');
-    const contrSlider = document.getElementById('contr-slider');
-    const satSlider = document.getElementById('sat-slider');
-    
-    brightSlider.addEventListener('input', (e) => { brightness = e.target.value; document.getElementById('bright-val').innerText = brightness+'%'; updateImageTransform(); });
-    contrSlider.addEventListener('input', (e) => { contrast = e.target.value; document.getElementById('contr-val').innerText = contrast+'%'; updateImageTransform(); });
-    satSlider.addEventListener('input', (e) => { saturation = e.target.value; document.getElementById('sat-val').innerText = saturation+'%'; updateImageTransform(); });
-    
-    // Grid System
-    const gridCanvas = document.getElementById('grid-canvas');
-    const gridCtx = gridCanvas.getContext('2d');
-    
-    function resizeGridCanvas() {
-      const rect = container.getBoundingClientRect();
-      gridCanvas.width = rect.width;
-      gridCanvas.height = rect.height;
-      gridCanvas.style.width = `${rect.width}px`;
-      gridCanvas.style.height = `${rect.height}px`;
-      drawGrid();
-    }
-    
-    function drawGrid() {
-      if (!gridActive) return;
-      const w = gridCanvas.width, h = gridCanvas.height;
-      gridCtx.clearRect(0, 0, w, h);
-      gridCtx.beginPath();
-      gridCtx.strokeStyle = 'rgba(95, 174, 227, 0.4)';
-      gridCtx.lineWidth = 1;
-      const step = 40;
-      for (let x = step; x < w; x += step) {
-        gridCtx.moveTo(x, 0);
-        gridCtx.lineTo(x, h);
-        gridCtx.stroke();
-      }
-      for (let y = step; y < h; y += step) {
-        gridCtx.moveTo(0, y);
-        gridCtx.lineTo(w, y);
-        gridCtx.stroke();
-      }
-      gridCtx.beginPath();
-      gridCtx.strokeStyle = 'rgba(200, 220, 255, 0.8)';
-      gridCtx.lineWidth = 1.5;
-      gridCtx.moveTo(w/2, 0);
-      gridCtx.lineTo(w/2, h);
-      gridCtx.stroke();
-      gridCtx.moveTo(0, h/2);
-      gridCtx.lineTo(w, h/2);
-      gridCtx.stroke();
-    }
-    
-    const gridBtn = document.getElementById('grid-btn');
-    gridBtn.addEventListener('click', () => {
-      gridActive = !gridActive;
-      gridCanvas.style.display = gridActive ? 'block' : 'none';
-      if (gridActive) { resizeGridCanvas(); drawGrid(); }
-      gridBtn.classList.toggle('active', gridActive);
-    });
-    
-    window.addEventListener('resize', () => { if(gridActive) resizeGridCanvas(); });
-    
-    // Measurement Tool
-    const measureBtn = document.getElementById('measure-mode-btn');
-    const measureStatus = document.getElementById('measure-status');
-    const crosshairDiv = document.getElementById('measure-crosshair');
-    
-    function getRelativeImageCoords(e) {
-      const rect = container.getBoundingClientRect();
-      const clientX = e.clientX || (e.touches ? e.touches[0].clientX : 0);
-      const clientY = e.clientY || (e.touches ? e.touches[0].clientY : 0);
-      let x = (clientX - rect.left) / rect.width;
-      let y = (clientY - rect.top) / rect.height;
-      x = Math.min(1, Math.max(0, x));
-      y = Math.min(1, Math.max(0, y));
-      return { x, y };
-    }
-    
-    function showDistance(p1, p2) {
-      const scaleMicronsPerPx = 2.25;
-      const dx = (p2.x - p1.x) * (img.naturalWidth || 1024);
-      const dy = (p2.y - p1.y) * (img.naturalHeight || 1024);
-      const distancePx = Math.hypot(dx, dy);
-      const microns = distancePx * scaleMicronsPerPx;
-      measureStatus.innerHTML = `${microns.toFixed(0)} µm`;
-      return microns;
-    }
-    
-    function handleMeasureClick(e) {
-      if (!measuring) return;
-      const coords = getRelativeImageCoords(e);
-      if (firstPoint === null) {
-        firstPoint = coords;
-        crosshairDiv.style.display = 'block';
-        const rect = container.getBoundingClientRect();
-        const leftPx = rect.left + coords.x * rect.width;
-        const topPx = rect.top + coords.y * rect.height;
-        crosshairDiv.style.left = `${leftPx}px`;
-        crosshairDiv.style.top = `${topPx}px`;
-      } else {
-        showDistance(firstPoint, coords);
-        crosshairDiv.style.display = 'none';
-        firstPoint = null;
-        measuring = false;
-        measureBtn.textContent = '📏 Ruler';
-        measureBtn.classList.remove('active');
-        measureStatus.innerHTML = 'OFF';
-      }
-    }
-    
-    measureBtn.addEventListener('click', () => {
-      measuring = !measuring;
-      if (measuring) {
-        firstPoint = null;
-        crosshairDiv.style.display = 'none';
-        measureStatus.innerHTML = 'Click 2 points';
-        measureBtn.textContent = '✔️ Measuring...';
-        measureBtn.classList.add('active');
-      } else {
-        measureStatus.innerHTML = 'OFF';
-        measureBtn.textContent = '📏 Ruler';
-        crosshairDiv.style.display = 'none';
-        measureBtn.classList.remove('active');
-      }
-    });
-    
-    container.addEventListener('click', handleMeasureClick);
-    
-    // Snapshot
-    document.getElementById('snapshot-btn').addEventListener('click', () => {
-      const rect = container.getBoundingClientRect();
-      const canvas = document.createElement('canvas');
-      canvas.width = rect.width;
-      canvas.height = rect.height;
-      const ctxSnap = canvas.getContext('2d');
-      ctxSnap.filter = `brightness(${brightness}%) contrast(${contrast}%) saturate(${saturation}%)`;
-      ctxSnap.drawImage(img, 0, 0, rect.width, rect.height);
-      const link = document.createElement('a');
-      link.download = `circumvallate_${new Date().toISOString().slice(0,19)}.png`;
-      link.href = canvas.toDataURL();
-      link.click();
-    });
-    
-    // Annotations with descriptions
-    const annotationButtons = document.querySelectorAll('[data-anno]');
-    const msgDiv = document.getElementById('annotation-message');
-    const annotationMap = {
-      tastebuds: { desc: '👅 Taste Buds: Barrel-shaped clusters in the trench epithelium containing 50-100 taste receptor cells each. Detect bitter, sour, and umami stimuli. The taste pore opens into the trench.', color: '#ffbc6e' },
-      glands: { desc: '🧪 Von Ebner\'s Glands: Serous acini located deep in lamina propria. Ducts open into the base of the trench, secreting fluid that flushes tastants across taste buds.', color: '#b77ee0' },
-      trench: { desc: '🌀 Circumvallate Trench (Sulcus): Deep invagination (0.5-1.5mm deep) surrounding the papilla. Critical for channeling food particles and dissolved tastants to taste buds.', color: '#e0a878' },
-      vessels: { desc: '🩸 Capillary Plexus: Dense network of blood capillaries in lamina propria supporting high metabolic activity of taste receptor cells. Fenestrated endothelium allows rapid exchange.', color: '#ff7b72' },
-      nerves: { desc: '⚡ Nerve Fibers (CN IX): Glossopharyngeal nerve endings innervating taste buds, transmitting signals to the nucleus solitarius in medulla oblongata.', color: '#88dd88' }
     };
-    
-    annotationButtons.forEach(btn => {
-      btn.addEventListener('click', () => {
-        const anno = btn.getAttribute('data-anno');
-        const data = annotationMap[anno];
-        if (data) {
-          msgDiv.innerHTML = `🔬 <strong style="color: ${data.color}">${anno.charAt(0).toUpperCase()+anno.slice(1)}</strong> — ${data.desc}`;
-          annotationButtons.forEach(b => b.classList.remove('active'));
-          btn.classList.add('active');
-          const oldBorder = container.parentElement.style.boxShadow;
-          container.parentElement.style.boxShadow = `0 0 0 3px ${data.color}, inset 0 0 0 2px ${data.color}`;
-          setTimeout(() => { container.parentElement.style.boxShadow = oldBorder; }, 800);
+
+    // Initialize application components
+    document.addEventListener('DOMContentLoaded', () => {
+      lucide.createIcons();
+      buildAnatomySelectionDeck();
+      syncMicroscopeHardwareMatrix();
+      registerFunctionalInteractionListeners();
+    });
+
+    // Populate Structural Selection Elements Inside UI Columns
+    function buildAnatomySelectionDeck() {
+      const containerElement = document.getElementById('anatomy-deck-container');
+      containerElement.innerHTML = '';
+      
+      Object.keys(histologyStructuresMatrix).forEach(key => {
+        const item = histologyStructuresMatrix[key];
+        const rowNode = document.createElement('button');
+        rowNode.setAttribute('data-target-id', key);
+        rowNode.className = "anatomy-row-node w-full text-left flex items-center justify-between px-3 py-2.5 rounded-xl bg-gray-900/40 border border-gray-800/60 hover:border-gray-700/80 transition duration-150 group";
+        rowNode.innerHTML = `
+          <div class="flex items-center gap-2 text-xs text-gray-300 font-medium">
+            <span class="w-2.5 h-2.5 rounded-md shadow-sm transition-transform group-hover:scale-110" style="background-color: ${item.color}"></span>
+            <span>${item.title}</span>
+          </div>
+          <i data-lucide="arrow-up-right" class="w-3.5 h-3.5 text-gray-600 group-hover:text-sky-400 transition transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5"></i>
+        `;
+        
+        rowNode.addEventListener('click', () => {
+          terminateGuidedTourSequence();
+          dispatchApertureFocusAnimation(key);
+        });
+        containerElement.appendChild(rowNode);
+      });
+      lucide.createIcons();
+    }
+
+    // High performance core hardware matrix calculations translation controller
+    function syncMicroscopeHardwareMatrix() {
+      // Establish strict field panning threshold constraints boundaries safely
+      const lockThreshold = 1200 * scale;
+      transX = Math.min(lockThreshold, Math.max(-lockThreshold, transX));
+      transY = Math.min(lockThreshold, Math.max(-lockThreshold, transY));
+
+      // Build layered core filter arrays dynamically
+      let aggregateFiltersString = `brightness(${brightness}%) contrast(${contrast}%) saturate(${saturation}%)`;
+      if (opticalFilter === 'mono') aggregateFiltersString += ' grayscale(100%) contrast(125%)';
+      if (opticalFilter === 'fluor') aggregateFiltersString += ' hue-rotate(250deg) invert(100%) saturate(180%)';
+
+      // Dispatched hardware acceleration translation steps
+      stageScaler.style.transform = `scale(${scale}) translate(${transX/scale}px, ${transY/scale}px)`;
+      imgAsset.style.filter = aggregateFiltersString;
+
+      // Draw active overlay graphics
+      if (reticleGridActive) computeReticleGridMesh();
+      positionFloatingStructuralPins();
+
+      // Update structural readout metrics targets
+      document.getElementById('hud-coords').innerText = `X: ${(transX/10).toFixed(0)}, Y: ${(transY/10).toFixed(0)}`;
+      document.getElementById('hud-depth').innerText = `${(1.220 / scale).toFixed(3)} mm`;
+    }
+
+    // Drag-To-Pan Action Pipeline Implementation
+    viewportTrigger.addEventListener('mousedown', (e) => {
+      if (activeSuiteTool === 'ruler' && measurementAnchorCoords !== null) return;
+      isDragging = true;
+      pointerStartX = e.clientX; pointerStartY = e.clientY;
+      baseTransX = transX; baseTransY = transY;
+    });
+
+    window.addEventListener('mousemove', (e) => {
+      if (!isDragging) return;
+      const shiftDeltaX = e.clientX - pointerStartX;
+      const shiftDeltaY = e.clientY - pointerStartY;
+      transX = baseTransX + shiftDeltaX;
+      transY = baseTransY + shiftDeltaY;
+      syncMicroscopeHardwareMatrix();
+    });
+
+    window.addEventListener('mouseup', () => { isDragging = false; });
+
+    // Touch Support for Mobile/Tablets
+    viewportTrigger.addEventListener('touchstart', (e) => {
+      if (activeSuiteTool === 'ruler' && measurementAnchorCoords !== null) return;
+      isDragging = true;
+      pointerStartX = e.touches[0].clientX; pointerStartY = e.touches[0].clientY;
+      baseTransX = transX; baseTransY = transY;
+    }, { passive: true });
+
+    window.addEventListener('touchmove', (e) => {
+      if (!isDragging) return;
+      const shiftDeltaX = e.touches[0].clientX - pointerStartX;
+      const shiftDeltaY = e.touches[0].clientY - pointerStartY;
+      transX = baseTransX + shiftDeltaX;
+      transY = baseTransY + shiftDeltaY;
+      syncMicroscopeHardwareMatrix();
+    }, { passive: true });
+
+    window.addEventListener('touchend', () => { isDragging = false; });
+
+    // Wheel Scroll Magnification Engine Links
+    viewportTrigger.addEventListener('wheel', (e) => {
+      e.preventDefault();
+      const adjustmentDirection = e.deltaY > 0 ? -1 : 1;
+      let prospectiveIndex = currentZoomIndex + adjustmentDirection;
+      if (prospectiveIndex >= 0 && prospectiveIndex < zoomScales.length) {
+        syncTurretMagnificationIndex(prospectiveIndex);
+      }
+    }, { passive: false });
+
+    function syncTurretMagnificationIndex(targetIdx) {
+      currentZoomIndex = Math.min(zoomScales.length - 1, Math.max(0, targetIdx));
+      scale = zoomScales[currentZoomIndex];
+      
+      // Update Turret Node Highlights
+      document.querySelectorAll('[data-zoom-level]').forEach(btn => {
+        const itemIdx = parseInt(btn.getAttribute('data-zoom-level'));
+        if (itemIdx === currentZoomIndex) {
+          btn.className = "turret-node py-2 text-xs font-mono font-bold rounded-lg bg-sky-500/10 border border-sky-500/20 text-sky-400";
+        } else {
+          btn.className = "turret-node py-2 text-xs font-mono font-bold rounded-lg text-gray-400 transition hover:text-white";
         }
       });
+
+      // Flash Aperture Sweep Indicator
+      const sweepBar = document.getElementById('lens-scan-line');
+      sweepBar.classList.remove('hidden');
+      setTimeout(() => sweepBar.classList.add('hidden'), 750);
+
+      syncMicroscopeHardwareMatrix();
+    }
+
+    // Kinetic Interpolation Translation Stage Driving Engine
+    function dispatchApertureFocusAnimation(key) {
+      const configuration = histologyStructuresMatrix[key];
+      if (!configuration) return;
+
+      let currentStepCount = 0;
+      const maxInterpolationSteps = 16;
+      
+      const primaryX = transX; const primaryY = transY; const primaryScale = scale;
+
+      let prospectiveIndex = zoomScales.indexOf(configuration.zoom);
+      if (prospectiveIndex !== -1) currentZoomIndex = prospectiveIndex;
+
+      function frameStep() {
+        currentStepCount++;
+        const ratio = currentStepCount / maxInterpolationSteps;
+        // Ease Out Cubic Calculation Form
+        const easeFactor = 1 - Math.pow(1 - ratio, 3);
+
+        transX = primaryX + (configuration.tx - primaryX) * easeFactor;
+        transY = primaryY + (configuration.ty - primaryY) * easeFactor;
+        scale = primaryScale + (configuration.zoom - primaryScale) * easeFactor;
+
+        syncMicroscopeHardwareMatrix();
+
+        if (currentStepCount < maxInterpolationSteps) {
+          requestAnimationFrame(frameStep);
+        } else {
+          syncTurretMagnificationIndex(currentZoomIndex);
+        }
+      }
+      requestAnimationFrame(frameStep);
+
+      // Highlight target selection nodes explicitly inside deck blocks
+      document.querySelectorAll('.anatomy-row-node').forEach(b => {
+        if(b.getAttribute('data-target-id') === key) {
+          b.className = "anatomy-row-node w-full text-left flex items-center justify-between px-3 py-2.5 rounded-xl bg-sky-500/10 border border-sky-500/30 text-sky-400 transition group";
+        } else {
+          b.className = "anatomy-row-node w-full text-left flex items-center justify-between px-3 py-2.5 rounded-xl bg-gray-900/40 border border-gray-800/60 text-gray-300 hover:border-gray-700/80 transition group";
+        }
+      });
+
+      // Update contextual readouts
+      statusHudText.innerText = `Target focus engaged on ${configuration.title}. Use tools to examine cellular structure.`;
+      synopsisReportCard.innerHTML = `
+        <h3 class="text-xs font-bold text-white flex items-center gap-1.5">
+          <span class="w-2 h-2 rounded-full" style="background-color: ${configuration.color}"></span>
+          ${configuration.title}
+        </h3>
+        <p class="text-xs text-gray-300 leading-relaxed">${configuration.summary}</p>
+      `;
+    }
+
+    // Plot Floating Map Node Tracking Points Dynamically
+    function positionFloatingStructuralPins() {
+      floatingPinTargetPlane.innerHTML = '';
+      const viewBounds = viewportTrigger.getBoundingClientRect();
+      const pivotCenterX = viewBounds.width / 2;
+      const pivotCenterY = viewBounds.height / 2;
+
+      Object.keys(histologyStructuresMatrix).forEach(key => {
+        const network = histologyStructuresMatrix[key];
+        network.pins.forEach(pin => {
+          // Map local matrix percentages out to absolute operational stage locations
+          const targetLocationX = pivotCenterX + transX + (pin.x - 50) * (viewBounds.width / 100) * scale;
+          const targetLocationY = pivotCenterY + transY + (pin.y - 50) * (viewBounds.height / 100) * scale;
+
+          // Render element if sitting directly inside viewing mask circle radius boundaries
+          if (targetLocationX >= 0 && targetLocationX <= viewBounds.width && targetLocationY >= 0 && targetLocationY <= viewBounds.height) {
+            const anchorElement = document.createElement('div');
+            anchorElement.className = 'absolute w-3 h-3 rounded-full border border-white/60 pointer-events-auto cursor-help transform -translate-x-1/2 -translate-y-1/2 transition duration-150 hover:scale-125 z-20 shadow-md';
+            anchorElement.style.left = `${targetLocationX}px`;
+            anchorElement.style.top = `${targetLocationY}px`;
+            anchorElement.style.backgroundColor = network.color;
+            anchorElement.title = network.title;
+
+            anchorElement.addEventListener('click', (e) => {
+              e.stopPropagation();
+              terminateGuidedTourSequence();
+              dispatchApertureFocusAnimation(key);
+            });
+            floatingPinTargetPlane.appendChild(anchorElement);
+          }
+        });
+      });
+
+      // Plot registered cell markers accurately alongside the image matrix layer coordinate modifications
+      cellTrackerNodesArray.forEach((cell, idx) => {
+        const absoluteCellX = pivotCenterX + transX + cell.stageXOffset * scale;
+        const absoluteCellY = pivotCenterY + transY + cell.stageYOffset * scale;
+
+        if (absoluteCellX >= 0 && absoluteCellX <= viewBounds.width && absoluteCellY >= 0 && absoluteCellY <= viewBounds.height) {
+          const tallyNode = document.createElement('div');
+          tallyNode.className = 'absolute w-4 h-4 bg-emerald-500 text-gray-950 font-mono font-bold text-[10px] flex items-center justify-center rounded-full transform -translate-x-1/2 -translate-y-1/2 shadow-lg pointer-events-auto cursor-pointer border border-white/40';
+          tallyNode.style.left = `${absoluteCellX}px`;
+          tallyNode.style.top = `${absoluteCellY}px`;
+          tallyNode.innerText = idx + 1;
+
+          tallyNode.addEventListener('click', (e) => {
+            e.stopPropagation();
+            cellTrackerNodesArray.splice(idx, 1);
+            positionFloatingStructuralPins();
+            diagnosticReadout.innerText = `CELLS: ${cellTrackerNodesArray.length}`;
+          });
+          floatingPinTargetPlane.appendChild(tallyNode);
+        }
+      });
+    }
+
+    // Grid Matrix Canvas Processing Engine Loops
+    const reticleCanvas = document.getElementById('reticle-canvas');
+    const reticleCtx = reticleCanvas.getContext('2d');
+
+    function reinitializeCanvasDimensions() {
+      const dimensions = viewportTrigger.getBoundingClientRect();
+      reticleCanvas.width = dimensions.width;
+      reticleCanvas.height = dimensions.height;
+      computeReticleGridMesh();
+    }
+
+    function computeReticleGridMesh() {
+      const w = reticleCanvas.width, h = reticleCanvas.height;
+      reticleCtx.clearRect(0, 0, w, h);
+      if (!reticleGridActive) return;
+
+      reticleCtx.beginPath();
+      reticleCtx.strokeStyle = 'rgba(56, 189, 248, 0.12)';
+      reticleCtx.lineWidth = 0.5;
+
+      const baselineStepSize = 44 * (scale < 1 ? 1 : scale > 3 ? 2.5 : scale);
+      const computedOffsetX = transX % baselineStepSize;
+      const computedOffsetY = transY % baselineStepSize;
+
+      for (let mx = computedOffsetX; mx < w; mx += baselineStepSize) {
+        reticleCtx.moveTo(mx, 0); reticleCtx.lineTo(mx, h);
+      }
+      for (let my = computedOffsetY; my < h; my += baselineStepSize) {
+        reticleCtx.moveTo(0, my); reticleCtx.lineTo(w, my);
+      }
+      reticleCtx.stroke();
+
+      // Golden Target Overlay Alignments
+      reticleCtx.beginPath();
+      reticleCtx.strokeStyle = 'rgba(245, 158, 11, 0.35)';
+      reticleCtx.lineWidth = 1.0;
+      reticleCtx.moveTo(w/2, 0); reticleCtx.lineTo(w/2, h);
+      reticleCtx.moveTo(0, h/2); reticleCtx.lineTo(w, h/2);
+      reticleCtx.stroke();
+    }
+
+    // Context Click Operations Management Logic Hub
+    viewportTrigger.addEventListener('click', (ev) => {
+      const frameBounds = viewportTrigger.getBoundingClientRect();
+      const clickX = ev.clientX - frameBounds.left;
+      const clickY = ev.clientY - frameBounds.top;
+
+      if (activeSuiteTool === 'ruler') {
+        if (measurementAnchorCoords === null) {
+          measurementAnchorCoords = { x: clickX, y: clickY };
+          const pointNode = document.getElementById('ruler-target-node');
+          pointNode.style.left = `${clickX}px`;
+          pointNode.style.top = `${clickY}px`;
+          pointNode.classList.remove('hidden');
+          diagnosticReadout.innerText = "MARK END POINT";
+        } else {
+          const runX = clickX - measurementAnchorCoords.x;
+          const runY = clickY - measurementAnchorCoords.y;
+          const pixelDistance = Math.hypot(runX, runY);
+          
+          // Micro-calibration spatial reference multiplier algorithms
+          const targetMicronsValue = (pixelDistance / scale) * 0.465;
+
+          diagnosticReadout.innerText = `${targetMicronsValue.toFixed(1)} μm`;
+          statusHudText.innerText = `Calculated separation span: ${targetMicronsValue.toFixed(2)} micrometers (μm).`;
+          
+          document.getElementById('ruler-target-node').classList.add('hidden');
+          measurementAnchorCoords = null;
+          resetDiagnosticToolsState();
+        }
+      } else if (activeSuiteTool === 'counter') {
+        const stageXOffset = (clickX - frameBounds.width / 2 - transX) / scale;
+        const stageYOffset = (clickY - frameBounds.height / 2 - transY) / scale;
+
+        cellTrackerNodesArray.push({ stageXOffset, stageYOffset });
+        positionFloatingStructuralPins();
+        diagnosticReadout.innerText = `COUNT: ${cellTrackerNodesArray.length}`;
+      }
     });
+
+    function resetDiagnosticToolsState() {
+      activeSuiteTool = 'none';
+      document.getElementById('tool-ruler').className = "flex items-center gap-2 text-xs py-2 px-3 rounded-xl border border-gray-800 bg-gray-900/50 text-gray-300 transition hover:bg-gray-900";
+      document.getElementById('tool-counter').className = "flex items-center gap-2 text-xs py-2 px-3 rounded-xl border border-gray-800 bg-gray-900/50 text-gray-300 transition hover:bg-gray-900";
+      viewportTrigger.style.cursor = 'grab';
+    }
+
+    // Dynamic Tour Management System Components
+    const tourPlanKeysList = ['tastebuds', 'glands', 'trench', 'epithelium'];
     
-    // Initialize
-    lucide.createIcons();
-    updateImageTransform();
-    
-    img.onload = () => {
-      if(gridActive) resizeGridCanvas();
-    };
-    
-    img.onerror = () => {
-      // Secondary fallback endpoint pointing to the alternative branch mapping setup if default branch is changed
-      img.src = "https://raw.githubusercontent.com/parnavar/medwisevideos/master/Tongue_histology_05.jpg";
-    };
-    
-    const resizeObserver = new ResizeObserver(() => { if(gridActive) resizeGridCanvas(); });
-    resizeObserver.observe(container);
-    
-    setTimeout(() => {
-      if(gridActive) resizeGridCanvas();
-    }, 100);
+    function initialTourWorkflowSequence() {
+      activeTourSequenceIndex = 0;
+      document.getElementById('tour-banner').classList.remove('hidden');
+      document.getElementById('tour-toggle-btn').innerText = "⏹️ Stop Tour";
+      executeActiveTourStepAction();
+    }
+
+    function terminateGuidedTourSequence() {
+      activeTourSequenceIndex = -1;
+      document.getElementById('tour-banner').classList.add('hidden');
+      document.getElementById('tour-toggle-btn').innerHTML = `<i data-lucide="compass" class="w-3.5 h-3.5"></i> Start Guided Tour`;
+      lucide.createIcons();
+    }
+
+    function executeActiveTourStepAction() {
+      if (activeTourSequenceIndex < 0 || activeTourSequenceIndex >= tourPlanKeysList.length) return;
+      const structureKey = tourPlanKeysList[activeTourSequenceIndex];
+      dispatchApertureFocusAnimation(structureKey);
+      document.getElementById('tour-step-text').innerHTML = `Tour Layer [${activeTourSequenceIndex + 1}/4]: <span class="text-white font-bold">${histologyStructuresMatrix[structureKey].title}</span>`;
+    }
+
+    // Connect Input Elements and Buttons cleanly to Action Managers
+    function registerFunctionalInteractionListeners() {
+      
+      // Objective lens buttons
+      document.querySelectorAll('[data-zoom-level]').forEach(b => {
+        b.addEventListener('click', () => {
+          syncTurretMagnificationIndex(parseInt(b.getAttribute('data-zoom-level')));
+        });
+      });
+
+      // Control elements sliders linkage
+      const brightIn = document.getElementById('input-bright');
+      const contrIn = document.getElementById('input-contr');
+      const satIn = document.getElementById('input-sat');
+
+      brightIn.addEventListener('input', (ev) => { brightness = ev.target.value; document.getElementById('label-bright').innerText = brightness + '%'; syncMicroscopeHardwareMatrix(); });
+      contrIn.addEventListener('input', (ev) => { contrast = ev.target.value; document.getElementById('label-contr').innerText = contrast + '%'; syncMicroscopeHardwareMatrix(); });
+      satIn.addEventListener('input', (ev) => { saturation = ev.target.value; document.getElementById('label-sat').innerText = saturation + '%'; syncMicroscopeHardwareMatrix(); });
+
+      // Optical filters selector buttons
+      document.getElementById('mode-normal').addEventListener('click', (e) => { processLightingTransition(e.currentTarget, 'normal'); });
+      document.getElementById('mode-mono').addEventListener('click', (e) => { processLightingTransition(e.currentTarget, 'mono'); });
+      document.getElementById('mode-fluor').addEventListener('click', (e) => { processLightingTransition(e.currentTarget, 'fluor'); });
+
+      function processLightingTransition(node, type) {
+        document.querySelectorAll('.filter-node').forEach(b => b.className = "filter-node text-[10px] py-1.5 rounded-lg font-mono bg-gray-900 border border-gray-800 text-gray-400 hover:border-gray-700");
+        node.className = "filter-node text-[10px] py-1.5 rounded-lg font-mono bg-sky-500/10 border border-sky-500/30 text-sky-400 font-medium";
+        opticalFilter = type;
+        syncMicroscopeHardwareMatrix();
+      }
+
+      // Toolkit activation controllers
+      document.getElementById('tool-grid').addEventListener('click', (ev) => {
+        reticleGridActive = !reticleGridActive;
+        reticleCanvas.style.display = reticleGridActive ? 'block' : 'none';
+        ev.currentTarget.classList.toggle('bg-amber-500/10');
+        ev.currentTarget.classList.toggle('border-amber-500/40');
+        ev.currentTarget.classList.toggle('text-amber-400');
+        if (reticleGridActive) { reinitializeCanvasDimensions(); }
+      });
+
+      document.getElementById('tool-ruler').addEventListener('click', (ev) => {
+        if (activeSuiteTool === 'ruler') {
+          resetDiagnosticToolsState();
+          diagnosticReadout.innerText = "STANDBY";
+        } else {
+          resetDiagnosticToolsState();
+          activeSuiteTool = 'ruler';
+          ev.currentTarget.className = "flex items-center gap-2 text-xs py-2 px-3 rounded-xl border border-sky-500/40 bg-sky-500/10 text-sky-400 font-medium transition";
+          diagnosticReadout.innerText = "MARK START POINT";
+          viewportTrigger.style.cursor = 'crosshair';
+        }
+      });
+
+      document.getElementById('tool-counter').addEventListener('click', (ev) => {
+        if (activeSuiteTool === 'counter') {
+          resetDiagnosticToolsState();
+          diagnosticReadout.innerText = "STANDBY";
+        } else {
+          resetDiagnosticToolsState();
+          activeSuiteTool = 'counter';
+          ev.currentTarget.className = "flex items-center gap-2 text-xs py-2 px-3 rounded-xl border border-emerald-500/40 bg-emerald-500/10 text-emerald-400 font-medium transition";
+          diagnosticReadout.innerText = `COUNT: ${cellTrackerNodesArray.length}`;
+          viewportTrigger.style.cursor = 'cell';
+        }
+      });
+
+      // Guided study tour navigation steps handlers
+      document.getElementById('tour-toggle-btn').addEventListener('click', () => {
+        if (activeTourSequenceIndex > -1) { terminateGuidedTourSequence(); } else { initialTourWorkflowSequence(); }
+      });
+      document.getElementById('prev-tour-btn').addEventListener('click', () => {
+        activeTourSequenceIndex = (activeTourSequenceIndex - 1 + tourPlanKeysList.length) % tourPlanKeysList.length;
+        executeActiveTourStepAction();
+      });
+      document.getElementById('next-tour-btn').addEventListener('click', () => {
+        activeTourSequenceIndex = (activeTourSequenceIndex + 1) % tourPlanKeysList.length;
+        executeActiveTourStepAction();
+      });
+
+      // Master system settings compilation reset button logic execution
+      document.getElementById('reset-deck-btn').addEventListener('click', () => {
+        transX = 0; transY = 0;
+        brightness = 100; contrast = 100; saturation = 100;
+        brightIn.value = 100; contrIn.value = 100; satIn.value = 100;
+        document.getElementById('label-bright').innerText = '100%';
+        document.getElementById('label-contr').innerText = '100%';
+        document.getElementById('label-sat').innerText = '100%';
+        cellTrackerNodesArray = [];
+        resetDiagnosticToolsState();
+        terminateGuidedTourSequence();
+        processLightingTransition(document.getElementById('mode-normal'), 'normal');
+        syncTurretMagnificationIndex(1);
+        diagnosticReadout.innerText = "SYSTEM RESET";
+      });
+
+      // High-resolution image capture framework pipeline implementation
+      document.getElementById('tool-snap').addEventListener('click', () => {
+        diagnosticReadout.innerText = "RENDERING...";
+        setTimeout(() => {
+          const exportCanvas = document.createElement('canvas');
+          exportCanvas.width = 1024; exportCanvas.height = 1024;
+          const context2d = exportCanvas.getContext('2d');
+          
+          let filteringProperties = `brightness(${brightness}%) contrast(${contrast}%) saturate(${saturation}%)`;
+          if (opticalFilter === 'mono') filteringProperties += ' grayscale(100%)';
+          if (opticalFilter === 'fluor') filteringProperties += ' hue-rotate(250deg) invert(100%)';
+          
+          context2d.filter = filteringProperties;
+          context2d.drawImage(imgAsset, 0, 0, 1024, 1024);
+          
+          const downloaderNode = document.createElement('a');
+          downloaderNode.download = `Micrograph_Capture_${Date.now()}.png`;
+          downloaderNode.href = exportCanvas.toDataURL();
+          downloaderNode.click();
+          diagnosticReadout.innerText = "EXPORT READY";
+        }, 250);
+      });
+
+      window.addEventListener('resize', () => { reinitializeCanvasDimensions(); });
+      new ResizeObserver(() => { reinitializeCanvasDimensions(); }).observe(viewportTrigger);
+    }
   </script>
 </body>
 </html>
