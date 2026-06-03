@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Circumvallate Papilla | Virtual Histology Microscope</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script src="https://cdn.jsdelivr.net/npm/lucide@0.263.0/dist/umd/lucide.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    * { user-select: none; }
+    body { background: #05070a; font-family: 'Inter', sans-serif; }
+    .microscope-eyepiece {
+      position: relative;
+      border-radius: 50%;
+      background: #0a0c12;
+      box-shadow: 0 25px 40px -15px rgba(0,0,0,0.8), inset 0 0 0 6px #2a2e3a, inset 0 0 0 12px #101218, 0 0 0 4px #1e2a3a, 0 20px 35px -8px black;
+      transition: all 0.2s;
+      overflow: hidden;
+    }
+    .glass-reflection {
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      background: radial-gradient(circle at 25% 25%, rgba(255,255,255,0.12) 0%, rgba(255,255,255,0.02) 60%, transparent 90%);
+      pointer-events: none;
+      z-index: 12;
+    }
+    .vignette-ring {
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      background: radial-gradient(circle, transparent 40%, rgba(0,0,0,0.65) 85%, #000000 100%);
+      pointer-events: none;
+      z-index: 10;
+      mix-blend-mode: multiply;
+    }
+    .control-panel-modern {
+      background: rgba(12, 16, 24, 0.75);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(60, 130, 200, 0.25);
+      border-radius: 20px;
+      transition: all 0.2s;
+    }
+    .slider-style {
+      -webkit-appearance: none;
+      background: linear-gradient(90deg, #2c5a7a, #5faee3);
+      height: 4px;
+      border-radius: 4px;
+    }
+    .slider-style::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 14px;
+      height: 14px;
+      background: #b0e0ff;
+      border-radius: 50%;
+      cursor: pointer;
+      box-shadow: 0 0 5px #5faee3;
+      border: none;
+    }
+    .toggle-glow.active {
+      background: rgba(80, 160, 255, 0.2);
+      border-color: #5faee3;
+      box-shadow: 0 0 8px rgba(80, 160, 255, 0.4);
+    }
+    .annotation-badge {
+      transition: all 0.15s ease;
+    }
+    .annotation-badge.active {
+      background: rgba(80, 160, 255, 0.3) !important;
+      border-left-width: 3px !important;
+      border-left-color: #5faee3 !important;
+      padding-left: 0.75rem !important;
+    }
+    .image-container {
+      transform-origin: center center;
+      transition: transform 0.05s linear;
+    }
+    .info-panel-scroll {
+      scrollbar-width: thin;
+      scrollbar-color: #2c5a7a #121620;
+    }
+    #image-pan-zoom {
+      cursor: grab;
+    }
+    #image-pan-zoom:active {
+      cursor: grabbing;
+    }
+  </style>
+</head>
+<body class="h-full overflow-hidden bg-[#05070a] text-[#eef4ff]">
+  <div class="h-full flex flex-col lg:flex-row gap-5 p-4 lg:p-6">
+
+    <div class="lg:w-72 w-full flex flex-col gap-4 order-3 lg:order-1 overflow-y-auto max-h-[30vh] lg:max-h-full">
+      <div class="control-panel-modern p-5">
+        <div class="flex items-center gap-2 mb-4">
+          <i data-lucide="microscope" class="w-5 h-5 text-[#5faee3]"></i>
+          <h3 class="font-semibold text-sm tracking-wide text-[#b9e2ff]">MICROSCOPE CONTROLS</h3>
+        </div>
+        
+        <div class="mb-4">
+          <div class="flex justify-between text-xs text-[#98b9d4] mb-1"><span>Brightness</span><span id="bright-val">100%</span></div>
+          <input type="range" id="bright-slider" min="30" max="200" value="100" class="slider-style w-full">
+        </div>
+        <div class="mb-4">
+          <div class="flex justify-between text-xs text-[#98b9d4] mb-1"><span>Contrast</span><span id="contr-val">100%</span></div>
+          <input type="range" id="contr-slider" min="50" max="180" value="100" class="slider-style w-full">
+        </div>
+        <div class="mb-4">
+          <div class="flex justify-between text-xs text-[#98b9d4] mb-1"><span>Stain Saturation</span><span id="sat-val">100%</span></div>
+          <input type="range" id="sat-slider" min="40" max="200" value="100" class="slider-style w-full">
+        </div>
+        
+        <div class="border-t border-[#1e2a3a] my-3"></div>
+        
+        <div class="flex gap-3 mb-4">
+          <div class="flex-1 bg-black/30 rounded-xl p-2 text-center">
+            <div class="text-[10px] text-[#7aa9c9]">MAGNIFICATION</div>
+            <div class="text-lg font-bold text-[#7bc5ff]" id="mag-label">4x</div>
+            <div class="flex justify-center gap-3 mt-1">
+              <button id="zoom-out-btn" class="bg-[#141c28] hover:bg-[#1f3142] rounded-full w-7 h-7 flex items-center justify-center transition"><i data-lucide="minus" class="w-3.5 h-3.5"></i></button>
+              <button id="zoom-in-btn" class="bg-[#141c28] hover:bg-[#1f3142] rounded-full w-7 h-7 flex items-center justify-center transition"><i data-lucide="plus" class="w-3.5 h-3.5"></i></button>
+            </div>
+          </div>
+          <div class="flex-1 bg-black/30 rounded-xl p-2 text-center">
+            <div class="text-[10px] text-[#7aa9c9]">MEASURE</div>
+            <div class="text-xs font-mono text-[#bde4ff]" id="measure-status">OFF</div>
+            <button id="measure-mode-btn" class="mt-1 text-[11px] bg-[#1a2533] px-2 py-0.5 rounded-full w-full hover:bg-[#2a3a4a] transition">📏 Ruler</button>
+          </div>
+        </div>
+        
+        <div class="flex gap-3 mb-4">
+          <button id="grid-btn" class="flex-1 flex items-center justify-center gap-1 bg-[#0f141f] border border-[#2c4058] rounded-xl py-2 text-xs transition hover:border-[#5faee3]"><i data-lucide="grid-3x3" class="w-3.5 h-3.5"></i> Grid</button>
+          <button id="snapshot-btn" class="flex-1 flex items-center justify-center gap-1 bg-[#0f141f] border border-[#2c4058] rounded-xl py-2 text-xs transition hover:bg-[#1e2f40]"><i data-lucide="camera" class="w-3.5 h-3.5"></i> Snapshot</button>
+        </div>
+        
+        <div class="text-[10px] text-[#6f8faa] flex justify-between mt-2">
+          <span>🖱️ Drag to pan</span>
+          <span>⚡ Scroll to zoom</span>
+        </div>
+      </div>
+      
+      <div class="control-panel-modern p-5">
+        <div class="flex items-center gap-2 mb-3">
+          <i data-lucide="map-pin" class="w-4 h-4 text-[#5faee3]"></i>
+          <h3 class="font-semibold text-sm">HISTOLOGY ANNOTATIONS</h3>
+        </div>
+        <div class="space-y-2">
+          <button data-anno="tastebuds" class="annotation-badge w-full text-left flex items-center gap-2 px-3 py-2 rounded-xl bg-[#0d1220] border-l-2 border-transparent text-[#bfd9f0] text-xs transition"><span class="w-2.5 h-2.5 rounded-full bg-[#ffbc6e]"></span> Taste Buds (Neuroepithelial)</button>
+          <button data-anno="glands" class="annotation-badge w-full text-left flex items-center gap-2 px-3 py-2 rounded-xl bg-[#0d1220] border-l-2 border-transparent text-[#bfd9f0] text-xs transition"><span class="w-2.5 h-2.5 rounded-full bg-[#b77ee0]"></span> Von Ebner's Glands</button>
+          <button data-anno="trench" class="annotation-badge w-full text-left flex items-center gap-2 px-3 py-2 rounded-xl bg-[#0d1220] border-l-2 border-transparent text-[#bfd9f0] text-xs transition"><span class="w-2.5 h-2.5 rounded-full bg-[#e0a878]"></span> Circumvallate Trench</button>
+          <button data-anno="vessels" class="annotation-badge w-full text-left flex items-center gap-2 px-3 py-2 rounded-xl bg-[#0d1220] border-l-2 border-transparent text-[#bfd9f0] text-xs transition"><span class="w-2.5 h-2.5 rounded-full bg-[#ff7b72]"></span> Capillary Plexus</button>
+          <button data-anno="nerves" class="annotation-badge w-full text-left flex items-center gap-2 px-3 py-2 rounded-xl bg-[#0d1220] border-l-2 border-transparent text-[#bfd9f0] text-xs transition"><span class="w-2.5 h-2.5 rounded-full bg-[#88dd88]"></span> Nerve Fibers (CN IX)</button>
+        </div>
+        <div class="mt-3 text-[10px] text-[#5e7e9a] italic">Click annotation → highlight + description</div>
+      </div>
+    </div>
+
+    <div class="flex-1 flex flex-col items-center justify-center relative order-1 lg:order-2">
+      <div class="text-center mb-3">
+        <h1 class="text-2xl font-semibold tracking-tight bg-gradient-to-r from-[#9fd4ff] to-[#5faee3] bg-clip-text text-transparent">Circumvallate Papilla</h1>
+        <p class="text-xs text-[#86aac9] mt-0.5">H&E Staining | Virtual Light Microscope</p>
+      </div>
+      
+      <div class="relative microscope-eyepiece w-[min(76vw,76vh,550px)] h-[min(76vw,76vh,550px)]">
+        <div class="glass-reflection"></div>
+        <div class="vignette-ring"></div>
+        
+        <div id="image-pan-zoom" class="absolute inset-0 overflow-hidden rounded-full">
+          <img id="histology-img" 
+               src="https://raw.githubusercontent.com/parnavar/medwisevideos/main/Tongue_histology_05.jpg"
+               alt="Circumvallate papilla micrograph H&E"
+               class="w-full h-full object-cover image-container" 
+               style="transform: scale(1) translate(0px, 0px); filter: brightness(1) contrast(1) saturate(1);"
+               crossorigin="anonymous">
+        </div>
+        
+        <canvas id="grid-canvas" class="absolute inset-0 w-full h-full rounded-full pointer-events-none z-20" style="display: none;"></canvas>
+        <div id="measure-crosshair" class="absolute rounded-full border-2 border-[#5faee3] w-8 h-8 pointer-events-none z-30 hidden" style="transform: translate(-50%, -50%); backdrop-filter: blur(2px); background: rgba(95,174,227,0.15);"></div>
+      </div>
+      
+      <div id="annotation-message" class="mt-4 max-w-md text-center bg-[#0a0f18]/80 backdrop-blur-md rounded-2xl px-4 py-2 border border-[#2a405a] text-sm text-[#cae3ff] transition-all duration-200">
+        🔬 Select any annotation from the left panel to identify histological structures.
+      </div>
+    </div>
+
+    <div class="lg:w-80 w-full order-2 lg:order-3 flex flex-col gap-4 overflow-y-auto pr-1 info-panel-scroll max-h-[45vh] lg:max-h-full">
+      <div class="control-panel-modern p-5">
+        <h2 class="text-md font-bold flex items-center gap-2 text-[#9ad0ff]"><i data-lucide="book-open" class="w-4 h-4"></i> Clinical & Histology Guide</h2>
+        <div class="mt-3 text-xs leading-relaxed text-[#c2d6ec] space-y-2">
+          <p><span class="font-semibold text-[#7bc5ff]">Circumvallate papillae</span> (8–12) form the V-shaped sulcus terminalis. Each papilla is surrounded by a deep trench lined by stratified squamous epithelium containing <span class="text-[#ffbc6e] font-medium">~250 taste buds</span> per papilla.</p>
+          <p>🔬 <strong class="text-[#b77ee0]">Von Ebner's glands</strong> secrete lingual lipase and serous fluid, flushing the trench to renew tastant stimuli.</p>
+          <p>⚡ <strong class="text-[#88dd88]">Glossopharyngeal nerve (CN IX)</strong> innervates vallate papillae, mediating bitter, sour, and umami signals.</p>
+          <div class="bg-[#00000040] rounded-lg p-2 mt-2 text-[10px] font-mono">
+            🧫 H&E stain: Eosinophilic (pink) = epithelium/cytoplasm | Basophilic (purple) = nuclei/taste buds
+          </div>
+        </div>
+      </div>
+      
+      <div class="control-panel-modern p-5">
+        <h3 class="text-sm font-semibold flex items-center gap-1"><i data-lucide="info" class="w-3.5 h-3.5"></i> Interactive Features</h3>
+        <ul class="text-xs space-y-2 mt-3 list-disc pl-4 text-[#b0cbee]">
+          <li><strong>Drag & scroll</strong> – navigate real micrograph like a microscope stage</li>
+          <li><strong>Grid overlay</strong> – measure distances & orientation</li>
+          <li><strong>Ruler tool</strong> – click two points to measure (μm scale)</li>
+          <li><strong>Image filters</strong> – simulate microscope light adjustments</li>
+          <li><strong>Annotations</strong> – highlight taste buds, glands, trench & nerves</li>
+        </ul>
+      </div>
+      
+      <div class="control-panel-modern p-5 text-[11px] text-[#9dbad6]">
+        <i data-lucide="image" class="inline w-3 h-3 mr-1"></i> High-resolution H&E stained section of circumvallate papilla. Source: Medwise Repository
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // DOM elements
+    const img = document.getElementById('histology-img');
+    const container = document.getElementById('image-pan-zoom');
+    let scale = 1;
+    let translateX = 0, translateY = 0;
+    let isPanning = false;
+    let startX = 0, startY = 0;
+    let startTranslateX = 0, startTranslateY = 0;
+    
+    const zoomLevels = [0.8, 1, 1.5, 2.2, 3.2];
+    const zoomLabels = ['2x', '4x', '10x', '20x', '40x'];
+    let zoomIdx = 1;
+    
+    let brightness = 100, contrast = 100, saturation = 100;
+    let gridActive = false;
+    let measuring = false;
+    let firstPoint = null;
+    
+    // Direct link to raw asset on GitHub to bypass layout interface wrappers
+    const imageUrl = "https://raw.githubusercontent.com/parnavar/medwisevideos/main/Tongue_histology_05.jpg";
+    img.src = imageUrl;
+    
+    function updateImageTransform() {
+      img.style.transform = `translate(${translateX}px, ${translateY}px) scale(${scale})`;
+      img.style.filter = `brightness(${brightness}%) contrast(${contrast}%) saturate(${saturation}%)`;
+      document.getElementById('mag-label').innerHTML = zoomLabels[zoomIdx];
+    }
+    
+    function setZoom(newIdx) {
+      zoomIdx = Math.min(zoomLevels.length-1, Math.max(0, newIdx));
+      scale = zoomLevels[zoomIdx];
+      updateImageTransform();
+    }
+    
+    function startPan(e) {
+      e.preventDefault();
+      isPanning = true;
+      const clientX = e.clientX || (e.touches ? e.touches[0].clientX : 0);
+      const clientY = e.clientY || (e.touches ? e.touches[0].clientY : 0);
+      startX = clientX;
+      startY = clientY;
+      startTranslateX = translateX;
+      startTranslateY = translateY;
+    }
+    
+    function onPanMove(e) {
+      if (!isPanning) return;
+      e.preventDefault();
+      const clientX = e.clientX || (e.touches ? e.touches[0].clientX : 0);
+      const clientY = e.clientY || (e.touches ? e.touches[0].clientY : 0);
+      const dx = clientX - startX;
+      const dy = clientY - startY;
+      translateX = startTranslateX + dx;
+      translateY = startTranslateY + dy;
+      updateImageTransform();
+    }
+    
+    function endPan() {
+      isPanning = false;
+    }
+    
+    function handleWheel(e) {
+      e.preventDefault();
+      const delta = e.deltaY > 0 ? -1 : 1;
+      let newIdx = zoomIdx + delta;
+      if (newIdx >= 0 && newIdx < zoomLevels.length) {
+        setZoom(newIdx);
+      }
+    }
+    
+    container.addEventListener('mousedown', startPan);
+    window.addEventListener('mousemove', onPanMove);
+    window.addEventListener('mouseup', endPan);
+    container.addEventListener('touchstart', startPan, {passive: false});
+    window.addEventListener('touchmove', onPanMove, {passive: false});
+    window.addEventListener('touchend', endPan);
+    container.addEventListener('wheel', handleWheel, {passive: false});
+    
+    // UI Controls
+    document.getElementById('zoom-in-btn').addEventListener('click', () => setZoom(zoomIdx+1));
+    document.getElementById('zoom-out-btn').addEventListener('click', () => setZoom(zoomIdx-1));
+    
+    const brightSlider = document.getElementById('bright-slider');
+    const contrSlider = document.getElementById('contr-slider');
+    const satSlider = document.getElementById('sat-slider');
+    
+    brightSlider.addEventListener('input', (e) => { brightness = e.target.value; document.getElementById('bright-val').innerText = brightness+'%'; updateImageTransform(); });
+    contrSlider.addEventListener('input', (e) => { contrast = e.target.value; document.getElementById('contr-val').innerText = contrast+'%'; updateImageTransform(); });
+    satSlider.addEventListener('input', (e) => { saturation = e.target.value; document.getElementById('sat-val').innerText = saturation+'%'; updateImageTransform(); });
+    
+    // Grid System
+    const gridCanvas = document.getElementById('grid-canvas');
+    const gridCtx = gridCanvas.getContext('2d');
+    
+    function resizeGridCanvas() {
+      const rect = container.getBoundingClientRect();
+      gridCanvas.width = rect.width;
+      gridCanvas.height = rect.height;
+      gridCanvas.style.width = `${rect.width}px`;
+      gridCanvas.style.height = `${rect.height}px`;
+      drawGrid();
+    }
+    
+    function drawGrid() {
+      if (!gridActive) return;
+      const w = gridCanvas.width, h = gridCanvas.height;
+      gridCtx.clearRect(0, 0, w, h);
+      gridCtx.beginPath();
+      gridCtx.strokeStyle = 'rgba(95, 174, 227, 0.4)';
+      gridCtx.lineWidth = 1;
+      const step = 40;
+      for (let x = step; x < w; x += step) {
+        gridCtx.moveTo(x, 0);
+        gridCtx.lineTo(x, h);
+        gridCtx.stroke();
+      }
+      for (let y = step; y < h; y += step) {
+        gridCtx.moveTo(0, y);
+        gridCtx.lineTo(w, y);
+        gridCtx.stroke();
+      }
+      gridCtx.beginPath();
+      gridCtx.strokeStyle = 'rgba(200, 220, 255, 0.8)';
+      gridCtx.lineWidth = 1.5;
+      gridCtx.moveTo(w/2, 0);
+      gridCtx.lineTo(w/2, h);
+      gridCtx.stroke();
+      gridCtx.moveTo(0, h/2);
+      gridCtx.lineTo(w, h/2);
+      gridCtx.stroke();
+    }
+    
+    const gridBtn = document.getElementById('grid-btn');
+    gridBtn.addEventListener('click', () => {
+      gridActive = !gridActive;
+      gridCanvas.style.display = gridActive ? 'block' : 'none';
+      if (gridActive) { resizeGridCanvas(); drawGrid(); }
+      gridBtn.classList.toggle('active', gridActive);
+    });
+    
+    window.addEventListener('resize', () => { if(gridActive) resizeGridCanvas(); });
+    
+    // Measurement Tool
+    const measureBtn = document.getElementById('measure-mode-btn');
+    const measureStatus = document.getElementById('measure-status');
+    const crosshairDiv = document.getElementById('measure-crosshair');
+    
+    function getRelativeImageCoords(e) {
+      const rect = container.getBoundingClientRect();
+      const clientX = e.clientX || (e.touches ? e.touches[0].clientX : 0);
+      const clientY = e.clientY || (e.touches ? e.touches[0].clientY : 0);
+      let x = (clientX - rect.left) / rect.width;
+      let y = (clientY - rect.top) / rect.height;
+      x = Math.min(1, Math.max(0, x));
+      y = Math.min(1, Math.max(0, y));
+      return { x, y };
+    }
+    
+    function showDistance(p1, p2) {
+      const scaleMicronsPerPx = 2.25;
+      const dx = (p2.x - p1.x) * (img.naturalWidth || 1024);
+      const dy = (p2.y - p1.y) * (img.naturalHeight || 1024);
+      const distancePx = Math.hypot(dx, dy);
+      const microns = distancePx * scaleMicronsPerPx;
+      measureStatus.innerHTML = `${microns.toFixed(0)} µm`;
+      return microns;
+    }
+    
+    function handleMeasureClick(e) {
+      if (!measuring) return;
+      const coords = getRelativeImageCoords(e);
+      if (firstPoint === null) {
+        firstPoint = coords;
+        crosshairDiv.style.display = 'block';
+        const rect = container.getBoundingClientRect();
+        const leftPx = rect.left + coords.x * rect.width;
+        const topPx = rect.top + coords.y * rect.height;
+        crosshairDiv.style.left = `${leftPx}px`;
+        crosshairDiv.style.top = `${topPx}px`;
+      } else {
+        showDistance(firstPoint, coords);
+        crosshairDiv.style.display = 'none';
+        firstPoint = null;
+        measuring = false;
+        measureBtn.textContent = '📏 Ruler';
+        measureBtn.classList.remove('active');
+        measureStatus.innerHTML = 'OFF';
+      }
+    }
+    
+    measureBtn.addEventListener('click', () => {
+      measuring = !measuring;
+      if (measuring) {
+        firstPoint = null;
+        crosshairDiv.style.display = 'none';
+        measureStatus.innerHTML = 'Click 2 points';
+        measureBtn.textContent = '✔️ Measuring...';
+        measureBtn.classList.add('active');
+      } else {
+        measureStatus.innerHTML = 'OFF';
+        measureBtn.textContent = '📏 Ruler';
+        crosshairDiv.style.display = 'none';
+        measureBtn.classList.remove('active');
+      }
+    });
+    
+    container.addEventListener('click', handleMeasureClick);
+    
+    // Snapshot
+    document.getElementById('snapshot-btn').addEventListener('click', () => {
+      const rect = container.getBoundingClientRect();
+      const canvas = document.createElement('canvas');
+      canvas.width = rect.width;
+      canvas.height = rect.height;
+      const ctxSnap = canvas.getContext('2d');
+      ctxSnap.filter = `brightness(${brightness}%) contrast(${contrast}%) saturate(${saturation}%)`;
+      ctxSnap.drawImage(img, 0, 0, rect.width, rect.height);
+      const link = document.createElement('a');
+      link.download = `circumvallate_${new Date().toISOString().slice(0,19)}.png`;
+      link.href = canvas.toDataURL();
+      link.click();
+    });
+    
+    // Annotations with descriptions
+    const annotationButtons = document.querySelectorAll('[data-anno]');
+    const msgDiv = document.getElementById('annotation-message');
+    const annotationMap = {
+      tastebuds: { desc: '👅 Taste Buds: Barrel-shaped clusters in the trench epithelium containing 50-100 taste receptor cells each. Detect bitter, sour, and umami stimuli. The taste pore opens into the trench.', color: '#ffbc6e' },
+      glands: { desc: '🧪 Von Ebner\'s Glands: Serous acini located deep in lamina propria. Ducts open into the base of the trench, secreting fluid that flushes tastants across taste buds.', color: '#b77ee0' },
+      trench: { desc: '🌀 Circumvallate Trench (Sulcus): Deep invagination (0.5-1.5mm deep) surrounding the papilla. Critical for channeling food particles and dissolved tastants to taste buds.', color: '#e0a878' },
+      vessels: { desc: '🩸 Capillary Plexus: Dense network of blood capillaries in lamina propria supporting high metabolic activity of taste receptor cells. Fenestrated endothelium allows rapid exchange.', color: '#ff7b72' },
+      nerves: { desc: '⚡ Nerve Fibers (CN IX): Glossopharyngeal nerve endings innervating taste buds, transmitting signals to the nucleus solitarius in medulla oblongata.', color: '#88dd88' }
+    };
+    
+    annotationButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const anno = btn.getAttribute('data-anno');
+        const data = annotationMap[anno];
+        if (data) {
+          msgDiv.innerHTML = `🔬 <strong style="color: ${data.color}">${anno.charAt(0).toUpperCase()+anno.slice(1)}</strong> — ${data.desc}`;
+          annotationButtons.forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          const oldBorder = container.parentElement.style.boxShadow;
+          container.parentElement.style.boxShadow = `0 0 0 3px ${data.color}, inset 0 0 0 2px ${data.color}`;
+          setTimeout(() => { container.parentElement.style.boxShadow = oldBorder; }, 800);
+        }
+      });
+    });
+    
+    // Initialize
+    lucide.createIcons();
+    updateImageTransform();
+    
+    img.onload = () => {
+      if(gridActive) resizeGridCanvas();
+    };
+    
+    img.onerror = () => {
+      // Secondary fallback endpoint pointing to the alternative branch mapping setup if default branch is changed
+      img.src = "https://raw.githubusercontent.com/parnavar/medwisevideos/master/Tongue_histology_05.jpg";
+    };
+    
+    const resizeObserver = new ResizeObserver(() => { if(gridActive) resizeGridCanvas(); });
+    resizeObserver.observe(container);
+    
+    setTimeout(() => {
+      if(gridActive) resizeGridCanvas();
+    }, 100);
+  </script>
+</body>
+</html>
