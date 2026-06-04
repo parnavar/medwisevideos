@@ -3,673 +3,753 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Clinical Osteology Suite • Scapula Lab</title>
+    <title>AnatoMatrix Studio Pro • Immersive Clinical Suite</title>
+    <!-- Tailwind CSS Engine v4 -->
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght=300;400;500;600;700&display=swap');
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #f8fafc;
-        }
-        .active-tab {
-            border-bottom: 3px solid #2563eb;
-            color: #2563eb;
-            font-weight: 700;
-            background-color: #ffffff;
-        }
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Noto+Sans+Devanagari:wght@400;600;700&family=Noto+Sans+Bengali:wght@400;600;700&display=swap');
         
-        /* Premium Diagnostic Radar Loading Animation styles */
-        .scan-line {
-            width: 100%;
-            height: 3px;
-            background: linear-gradient(90deg, transparent, #2563eb, transparent);
-            position: absolute;
-            animation: scanMove 1.4s ease-in-out infinite;
-        }
-        @keyframes scanMove {
-            0% { top: 0%; opacity: 0; }
-            50% { opacity: 1; }
-            100% { top: 100%; opacity: 0; }
+        body {
+            font-family: 'Plus Jakarta Sans', 'Noto Sans Devanagari', 'Noto Sans Bengali', sans-serif;
+            background-color: #030712;
+            color: #f3f4f6;
         }
 
-        /* Physics Engine for interactive Flashcard mechanics */
-        .flashcard-inner {
-            transition: transform 0.6s;
+        /* Glassmorphic Cyberpunk Mesh Background Grid */
+        .immersive-mesh {
+            background-color: #060b18;
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(37, 99, 235, 0.12) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(99, 102, 241, 0.12) 0px, transparent 50%),
+                linear-gradient(rgba(255, 255, 255, 0.007) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.007) 1px, transparent 1px);
+            background-size: 100% 100%, 100% 100%, 32px 32px, 32px 32px;
+        }
+
+        /* Fluid App Layout Custom Scrollbars */
+        .custom-scroll::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        .custom-scroll::-webkit-scrollbar-track {
+            background: rgba(15, 23, 42, 0.6);
+        }
+        .custom-scroll::-webkit-scrollbar-thumb {
+            background: rgba(51, 65, 85, 0.5);
+            border-radius: 10px;
+        }
+        .custom-scroll::-webkit-scrollbar-thumb:hover {
+            background: rgba(59, 130, 246, 0.7);
+        }
+
+        /* High-fidelity CSS perspective cards */
+        .perspective-frame {
+            perspective: 1200px;
+        }
+        .flashcard-inner-matrix {
+            transition: transform 0.7s cubic-bezier(0.34, 1.56, 0.64, 1);
             transform-style: preserve-3d;
         }
-        .flipped { transform: rotateY(180deg); }
-        .card-front, .card-back { backface-visibility: hidden; }
-        .card-back { transform: rotateY(180deg); }
-
-        /* Smooth 0.3s transition for interactive bone data loading elements */
-        .smooth-transition {
-            transition: all 0.30s ease-in-out;
+        .flipped-state {
+            transform: rotateY(180deg);
+        }
+        .face-shield-front, .face-shield-back {
+            backface-visibility: hidden;
+            -webkit-backface-visibility: hidden;
+        }
+        .face-shield-back {
+            transform: rotateY(180deg);
         }
     </style>
 </head>
-<body class="h-screen flex flex-col text-slate-800 overflow-hidden">
+<body class="h-screen flex flex-col immersive-mesh overflow-hidden antialiased">
 
-    <div class="bg-gradient-to-r from-slate-900 via-blue-950 to-slate-900 text-white px-5 py-4 border-b border-blue-900 shadow-md shrink-0 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-        <div class="flex items-center space-x-3.5">
-            <div class="w-10 h-10 rounded-xl bg-blue-600/20 border border-blue-400/40 flex items-center justify-center text-xl shadow-inner">🦴</div>
+    <!-- Top Immersive Command Bar -->
+    <header class="border-b border-slate-800 bg-slate-950/60 backdrop-blur-xl px-6 py-4 flex flex-col sm:flex-row justify-between items-center z-30 shrink-0 gap-4">
+        <div class="flex items-center space-x-4 w-full sm:w-auto">
+            <div class="w-11 h-11 rounded-xl bg-gradient-to-tr from-blue-500 via-indigo-600 to-purple-600 flex items-center justify-center text-white text-xl shadow-lg shadow-blue-500/20">
+                🧬
+            </div>
             <div>
                 <div class="flex items-center gap-2">
-                    <span class="text-[10px] font-extrabold tracking-widest text-blue-400 uppercase bg-blue-950 px-2 py-0.5 rounded border border-blue-900">OSTEOLOGY GUIDE</span>
-                    <span id="global-tracker-tag" class="text-[10px] font-bold text-emerald-400">0/6 Explored</span>
+                    <h1 class="text-base font-extrabold tracking-tight text-white">AnatoMatrix Studio</h1>
+                    <span class="text-[10px] font-bold text-blue-400 bg-blue-500/10 border border-blue-500/20 px-2 py-0.5 rounded-full uppercase tracking-widest">v2.0 Pro</span>
                 </div>
-                <h1 class="text-lg font-bold tracking-tight text-white mt-0.5">OSTEOLOGY PROFILE: <span class="text-blue-400 font-extrabold">THE SCAPULA BONE</span></h1>
-            </div>
-        </div>
-        
-        <div class="flex flex-col sm:flex-row items-start sm:items-center gap-3 bg-slate-800/60 border border-slate-700/50 px-3 py-1.5 rounded-xl text-xs w-full sm:w-auto">
-            <div id="streak-badge" class="flex items-center gap-1 bg-amber-500/20 border border-amber-500/30 text-amber-400 font-bold px-2 py-0.5 rounded-md text-[10px]">
-                🔥 <span id="streak-count">0</span>-Card Streak
-            </div>
-            <div class="flex-1 sm:flex-initial">
-                <div class="flex justify-between text-[10px] text-slate-400 mb-0.5 font-bold">
-                    <span>LAB MASTERY COMPLETE</span>
-                    <span id="mastery-percent">0%</span>
-                </div>
-                <div class="w-40 bg-slate-700 h-1.5 rounded-full overflow-hidden">
-                    <div id="mastery-bar" class="bg-blue-500 h-full w-0 transition-all duration-700"></div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="flex-1 flex flex-col lg:flex-row overflow-hidden">
-        
-        <div class="w-full lg:w-[45%] h-[35vh] lg:h-full flex flex-col bg-slate-50 p-2 md:p-4 border-b lg:border-b-0 lg:border-r border-slate-200 shrink-0">
-            <div class="bg-white rounded-2xl border border-slate-200 shadow-xs flex-1 relative overflow-hidden flex flex-col">
-                <div class="bg-slate-50 border-b border-slate-100 px-3 py-2 flex justify-between items-center text-[10px] font-bold text-slate-400 tracking-wider">
-                    <span>🔴 INTERACTIVE 3D ANATOMY ATLAS</span>
-                    <span class="text-blue-600 flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-blue-500 inline-block animate-pulse"></span> Touch Orbit Ready</span>
-                </div>
-                <div class="w-full flex-1 relative">
-                    <iframe title="Scapula Bone 3d Model" class="absolute inset-0 w-full h-full" src="https://sketchfab.com/models/a40e73a99c5c4b5a95268c4a2ab64033/embed?autostart=1&ui_controls=1&ui_infos=0" frameborder="0" allowfullscreen allow="autoplay; fullscreen; xr-spatial-tracking"></iframe>
-                </div>
+                <p class="text-[11px] text-slate-400 font-medium">Scapular Dynamics & Premium Clinical Board Emulator</p>
             </div>
         </div>
 
-        <div class="w-full lg:w-[55%] bg-white flex flex-col h-[65vh] lg:h-full overflow-hidden">
+        <!-- Master Analytics & Global Tools -->
+        <div class="flex items-center justify-between sm:justify-end w-full sm:w-auto gap-4">
+            <!-- Global Dataset Mode Selector Switch -->
+            <div class="bg-slate-900 border border-slate-800 p-1 rounded-xl flex items-center">
+                <button id="mode-classic" onclick="toggleDatasetMode('classic')" class="px-3 py-1.5 rounded-lg text-[11px] font-bold tracking-wide transition cursor-pointer bg-blue-600 text-white shadow-xs">
+                    Classic Anatomy
+                </button>
+                <button id="mode-clinical" onclick="toggleDatasetMode('clinical')" class="px-3 py-1.5 rounded-lg text-[11px] font-bold tracking-wide transition cursor-pointer text-slate-400 hover:text-white">
+                    Clinical Case Mode
+                </button>
+            </div>
+
+            <!-- Global Mastery HUD Statistics -->
+            <div class="flex items-center space-x-3 bg-slate-900/90 border border-slate-800 px-4 py-2 rounded-xl shadow-inner text-xs">
+                <div class="text-right">
+                    <span class="text-[10px] block text-slate-500 font-bold uppercase tracking-wider">Session Yield</span>
+                    <span id="global-mastery-text" class="font-extrabold text-indigo-400">0% Mastered</span>
+                </div>
+                <div class="w-16 bg-slate-800 h-2 rounded-full overflow-hidden">
+                    <div id="global-mastery-bar" class="bg-gradient-to-r from-blue-500 to-indigo-500 h-full w-0 transition-all duration-500"></div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Workspace Frame Layout Split -->
+    <div class="flex-1 flex flex-col lg:flex-row overflow-hidden min-h-0">
+        
+        <!-- SIDEBAR LEFT: Interactive Viewport HUD Console -->
+        <aside class="w-full lg:w-[42%] bg-slate-950/40 border-r border-slate-900 flex flex-col shrink-0 min-h-0">
+            <!-- Interactive 3D Canvas Reference Block -->
+            <div class="h-[45%] border-b border-slate-900 relative group bg-black/60">
+                <div class="absolute top-3 left-3 z-20 bg-slate-900/90 backdrop-blur-md px-3 py-1.5 rounded-lg border border-slate-800 text-[10px] font-bold tracking-widest text-slate-400 flex items-center gap-2">
+                    <span class="w-1.5 h-1.5 rounded-full bg-blue-500 animate-ping"></span> 
+                    <span>INTERACTIVE OSTEOLOGY HUD</span>
+                </div>
+                <iframe title="Scapula Bone 3d Model" class="w-full h-full border-0 shadow-inner" src="https://sketchfab.com/models/a40e73a99c5c4b5a95268c4a2ab64033/embed?autostart=1&ui_controls=0&ui_infos=0&dark_mode=1" allowfullscreen allow="autoplay; fullscreen; xr-spatial-tracking"></iframe>
+            </div>
+
+            <!-- Bony Landmark Quick-Target Navigation Matrix -->
+            <div class="p-4 flex-1 flex flex-col min-h-0">
+                <div class="flex items-center justify-between mb-3">
+                    <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-2">
+                        <span>🎯</span> Scapular Hotspot Boundary Map
+                    </h3>
+                </div>
+                <!-- Hotspot grid system representing regions -->
+                <div class="grid grid-cols-2 gap-2 overflow-y-auto custom-scroll pr-1">
+                    <button onclick="triggerHotspot('glenoid')" class="p-3 text-left bg-slate-900/60 border border-slate-800 rounded-xl hover:border-blue-500/50 hover:bg-slate-900 transition text-xs font-medium cursor-pointer group">
+                        <span class="block font-bold text-blue-400 group-hover:text-blue-300">Glenoid Cavity</span>
+                        <span class="text-[10px] text-slate-500 block mt-0.5">Lateral angle articular socket profile</span>
+                    </button>
+                    <button onclick="triggerHotspot('coracoid')" class="p-3 text-left bg-slate-900/60 border border-slate-800 rounded-xl hover:border-indigo-500/50 hover:bg-slate-900 transition text-xs font-medium cursor-pointer group">
+                        <span class="block font-bold text-indigo-400 group-hover:text-indigo-300">Coracoid Process</span>
+                        <span class="text-[10px] text-slate-500 block mt-0.5">Anterior hook projection system</span>
+                    </button>
+                    <button onclick="triggerHotspot('spine')" class="p-3 text-left bg-slate-900/60 border border-slate-800 rounded-xl hover:border-purple-500/50 hover:bg-slate-900 transition text-xs font-medium cursor-pointer group">
+                        <span class="block font-bold text-purple-400 group-hover:text-purple-300">Scapular Spine</span>
+                        <span class="text-[10px] text-slate-500 block mt-0.5">Transverse shelf, splits posterior face</span>
+                    </button>
+                    <button onclick="triggerHotspot('medial')" class="p-3 text-left bg-slate-900/60 border border-slate-800 rounded-xl hover:border-emerald-500/50 hover:bg-slate-900 transition text-xs font-medium cursor-pointer group">
+                        <span class="block font-bold text-emerald-400 group-hover:text-emerald-300">Medial Border</span>
+                        <span class="text-[10px] text-slate-500 block mt-0.5">Extensive vertebral border line</span>
+                    </button>
+                </div>
+                <!-- Hotspot display output field -->
+                <div id="hotspot-display" class="mt-3 p-3.5 bg-slate-950/80 border border-slate-900 rounded-xl text-[11px] leading-relaxed text-slate-400 hidden animate-fade-in">
+                    <strong id="hotspot-title" class="text-white block mb-1"></strong>
+                    <span id="hotspot-text"></span>
+                </div>
+            </div>
+        </aside>
+
+        <!-- DASHBOARD RIGHT: Tabs Suite Console Window -->
+        <main class="flex-1 bg-slate-950/20 backdrop-blur-md flex flex-col min-h-0">
             
-            <div class="flex border-b border-slate-200 bg-slate-50/80 overflow-x-auto text-xs md:text-sm shrink-0 sticky top-0 z-10">
-                <button id="tab-explore" onclick="switchTab('explore')" class="px-5 py-3.5 text-slate-500 hover:text-slate-800 font-semibold transition cursor-pointer whitespace-nowrap active-tab">Explore Muscles</button>
-                <button id="tab-matrix" onclick="switchTab('matrix')" class="px-5 py-3.5 text-slate-500 hover:text-slate-800 font-semibold transition cursor-pointer whitespace-nowrap">Master Data Table</button>
-                <button id="tab-flashcards" onclick="switchTab('flashcards')" class="px-5 py-3.5 text-slate-500 hover:text-slate-800 font-semibold transition cursor-pointer whitespace-nowrap">Revision Flashcards</button>
-                <button id="tab-quiz" onclick="switchTab('quiz')" class="px-5 py-3.5 text-slate-500 hover:text-slate-800 font-semibold transition cursor-pointer whitespace-nowrap">Interactive Exam</button>
-                <button id="tab-qa" onclick="switchTab('qa')" class="px-5 py-3.5 text-slate-500 hover:text-slate-800 font-semibold transition cursor-pointer whitespace-nowrap flex items-center gap-1">✨ Clinical Q&A</button>
+            <!-- Sleek Tab Control Rail Strip -->
+            <div class="flex border-b border-slate-900 bg-slate-950/90 overflow-x-auto text-xs shrink-0 z-20 custom-scroll">
+                <button id="tab-explore" onclick="routeTab('explore')" class="px-6 py-4.5 text-slate-400 hover:text-white font-bold transition cursor-pointer whitespace-nowrap border-b-2 border-transparent active-tab">Explore Anatomy</button>
+                <button id="tab-matrix" onclick="routeTab('matrix')" class="px-6 py-4.5 text-slate-400 hover:text-white font-bold transition cursor-pointer whitespace-nowrap border-b-2 border-transparent">Data Matrix</button>
+                <button id="tab-flashcards" onclick="routeTab('flashcards')" class="px-6 py-4.5 text-slate-400 hover:text-white font-bold transition cursor-pointer whitespace-nowrap border-b-2 border-transparent">Adaptive SRS Deck</button>
+                <button id="tab-quiz" onclick="routeTab('quiz')" class="px-6 py-4.5 text-slate-400 hover:text-white font-bold transition cursor-pointer whitespace-nowrap border-b-2 border-transparent">Exam Core Quiz</button>
+                <button id="tab-qa" onclick="routeTab('qa')" class="px-6 py-4.5 text-blue-400 hover:text-blue-300 font-bold transition cursor-pointer whitespace-nowrap border-b-2 border-transparent flex items-center gap-1.5">💬 Knowledge Desk</button>
             </div>
 
-            <div id="panel-explore" class="flex-1 flex flex-col overflow-hidden">
-                <div class="p-3 border-b border-slate-100 bg-white shrink-0 flex flex-col md:flex-row gap-2 items-center justify-between">
-                    <div class="relative w-full md:flex-1">
-                        <span class="absolute inset-y-0 left-3 flex items-center text-slate-400 text-xs">🔍</span>
-                        <input id="search-bar" oninput="filterMuscles()" type="text" placeholder="Type to scan attached muscles instantly..." class="w-full pl-8 pr-3 py-1.5 text-xs rounded-lg border border-slate-200 focus:outline-hidden focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20 bg-slate-50/50">
-                    </div>
-                    <div class="flex items-center gap-1 text-[10px] font-bold text-slate-400 shrink-0 w-full md:w-auto">
-                        <span>FILTER:</span>
-                        <button onclick="filterByGroup('all')" class="px-2 py-1 rounded bg-slate-100 text-slate-600 hover:bg-blue-50 hover:text-blue-600 transition cursor-pointer">All</button>
-                        <button onclick="filterByGroup('Rotator Cuff')" class="px-2 py-1 rounded bg-slate-100 text-slate-600 hover:bg-blue-50 hover:text-blue-600 transition cursor-pointer">Rotator Cuff</button>
-                        <button onclick="filterByGroup('Axioappendicular')" class="px-2 py-1 rounded bg-slate-100 text-slate-600 hover:bg-blue-50 hover:text-blue-600 transition cursor-pointer">Axioappendicular</button>
+            <!-- PANEL 1: EXPLORE LAB PANEL -->
+            <div id="panel-explore" class="flex-1 flex flex-col min-h-0 overflow-y-auto custom-scroll p-4 space-y-4">
+                <!-- Search filtering block frame -->
+                <div class="flex gap-2 items-center bg-slate-900/40 p-2 border border-slate-900 rounded-xl shrink-0">
+                    <div class="relative flex-1">
+                        <span class="absolute inset-y-0 left-3.5 flex items-center text-slate-500 text-xs">🔍</span>
+                        <input id="search-filter-input" oninput="executeMuscleSearch()" type="text" placeholder="Filter target muscle files or regional functional groupings instantly..." class="w-full pl-10 pr-4 py-2 text-xs bg-slate-950 border border-slate-800 rounded-lg focus:outline-none focus:border-blue-500 font-medium text-white transition">
                     </div>
                 </div>
 
-                <div class="p-3 border-b border-slate-100 bg-slate-50/30 overflow-y-auto max-h-[85px] shrink-0">
-                    <div class="flex flex-wrap gap-1.5" id="chip-container">
-                        </div>
+                <!-- Horizontal Pill Dock Selector -->
+                <div class="overflow-x-auto pb-2 custom-scroll shrink-0">
+                    <div class="flex space-x-2" id="pill-dock-container">
+                        <!-- Placed dynamically via initialization life loop -->
+                    </div>
                 </div>
 
-                <div class="flex-1 overflow-auto p-4 relative">
-                    
-                    <div id="radar-loading-overlay" class="hidden absolute inset-0 bg-white/90 backdrop-blur-xs z-30 flex flex-col items-center justify-center space-y-2">
-                        <div class="w-48 h-20 border border-blue-200 bg-blue-50/40 rounded-xl relative overflow-hidden flex flex-col items-center justify-center">
-                            <div class="scan-line"></div>
-                            <span class="text-[10px] font-bold text-blue-600 tracking-widest animate-pulse">RUNNING ANATOMICAL SCAN...</span>
+                <!-- Empty state visual field fallback -->
+                <div id="empty-state-card" class="py-20 flex flex-col items-center justify-center text-center p-6 border border-dashed border-slate-800 rounded-2xl">
+                    <div class="w-14 h-14 rounded-2xl bg-slate-900 flex items-center justify-center text-2xl mb-3 shadow-inner">📋</div>
+                    <p class="text-xs font-bold text-slate-300">No Target File Active</p>
+                    <p class="text-[11px] max-w-xs mt-1 text-slate-500">Select an anatomical macro asset pill above or use the boundary map targets to deploy granular database configurations.</p>
+                </div>
+
+                <!-- Active Analytical Data Presentation View -->
+                <div id="active-data-card" class="hidden space-y-4 animate-fade-in">
+                    <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-3 bg-slate-900/60 p-4 border border-slate-900 rounded-2xl">
+                        <div>
+                            <div class="flex items-center gap-2.5 flex-wrap">
+                                <h2 id="view-muscle-header" class="text-lg font-black text-white tracking-tight">Muscle Profile Name</h2>
+                                <span id="view-muscle-badge" class="text-[9px] font-bold text-blue-400 bg-blue-500/10 border border-blue-500/20 px-2.5 py-0.5 rounded-md uppercase tracking-wider">Group</span>
+                            </div>
+                            <p id="view-vignette-teaser" class="text-[11px] text-amber-400 font-medium mt-1 hidden"></p>
                         </div>
-                    </div>
-
-                    <div id="no-selection-prompt" class="h-full flex flex-col items-center justify-center text-center p-6 text-slate-400">
-                        <div class="text-4xl mb-2">📋</div>
-                        <p class="text-sm font-semibold text-slate-600">No Interactive Attachment Selected</p>
-                        <p class="text-xs max-w-xs mt-0.5">Pick a targeted muscle tag above to initiate a clinical matrix scan on its origin and insertion pathways.</p>
-                    </div>
-
-                    <div id="table-display-container" class="hidden space-y-4 smooth-transition opacity-0 transform translate-y-2">
-                        <div class="flex justify-between items-center border-b border-slate-100 pb-2">
-                            <div class="flex items-center space-x-2">
-                                <h2 id="meta-muscle-name" class="text-base md:text-lg font-bold text-slate-900 tracking-tight">Muscle Name</h2>
-                                <button onclick="pronounceActiveMuscle()" class="text-xs p-1 bg-slate-100 hover:bg-slate-200 rounded-md border border-slate-200 transition text-slate-600 cursor-pointer flex items-center gap-1 font-medium" title="Speak Profile Analysis">
-                                    🔊 Full Pronunciation Scan
+                        <div class="flex items-center gap-2 shrink-0">
+                            <button onclick="dispatchAudioSynthesis()" class="px-3 py-2 bg-slate-950 border border-slate-800 hover:border-blue-500/40 rounded-xl transition text-[11px] font-bold text-slate-300 cursor-pointer flex items-center gap-1.5 shadow-sm">
+                                🔊 Speak Info
+                            </button>
+                            <!-- Language Translation Dropper -->
+                            <div class="relative">
+                                <button onclick="toggleDialectMenu()" class="px-3 py-2 bg-slate-950 border border-slate-800 hover:border-indigo-500/40 rounded-xl transition text-[11px] font-bold text-slate-300 cursor-pointer flex items-center gap-1">
+                                    🌐 Explanation Menu <span class="text-[8px] text-slate-500 ml-1">▼</span>
                                 </button>
+                                <div id="dialect-menu-dropdown" class="hidden absolute right-0 mt-1.5 w-36 bg-slate-900 border border-slate-800 rounded-xl shadow-2xl z-50 overflow-hidden divide-y divide-slate-800">
+                                    <button onclick="deployDialectTranslation('hi')" class="w-full text-left px-4 py-2.5 text-[11px] font-medium text-slate-300 hover:bg-slate-950 hover:text-white transition">Hindi (हिंदी)</button>
+                                    <button onclick="deployDialectTranslation('bn')" class="w-full text-left px-4 py-2.5 text-[11px] font-medium text-slate-300 hover:bg-slate-950 hover:text-white transition">Bengali (বাংলা)</button>
+                                </div>
                             </div>
-                            <span id="meta-muscle-group" class="text-[9px] font-bold text-blue-600 bg-blue-50 px-2.5 py-1 rounded-md border border-blue-100 uppercase tracking-wider">Group</span>
                         </div>
+                    </div>
 
-                        <div class="overflow-hidden border border-slate-200 rounded-xl bg-white shadow-2xs">
-                            <table class="w-full text-left text-xs border-collapse">
-                                <thead>
-                                    <tr class="bg-slate-50 border-b border-slate-200 text-slate-400 font-bold uppercase tracking-wider text-[10px]">
-                                        <th class="p-3 w-28 border-r border-slate-200">Anatomy Parameter</th>
-                                        <th class="p-3">Specific Metric Description Mapping</th>
-                                    </tr>
-                                </thead>
-                                <tbody class="divide-y divide-slate-200">
-                                    <tr class="hover:bg-slate-50/50 transition">
-                                        <td class="p-3 font-bold text-blue-600 bg-blue-50/10 border-r border-slate-200">🎯 Origin</td>
-                                        <td id="td-origin" class="p-3 text-slate-600 leading-relaxed font-medium"></td>
-                                    </tr>
-                                    <tr class="hover:bg-slate-50/50 transition">
-                                        <td class="p-3 font-bold text-indigo-600 bg-indigo-50/10 border-r border-slate-200">📌 Insertion</td>
-                                        <td id="td-insertion" class="p-3 text-slate-600 leading-relaxed font-medium"></td>
-                                    </tr>
-                                    <tr class="hover:bg-slate-50/50 transition">
-                                        <td class="p-3 font-bold text-emerald-600 bg-emerald-50/10 border-r border-slate-200">⚡ Innervation</td>
-                                        <td id="td-innervation" class="p-3 text-slate-700 font-semibold"></td>
-                                    </tr>
-                                    <tr class="hover:bg-slate-50/50 transition">
-                                        <td class="p-3 font-bold text-amber-600 bg-amber-50/10 border-r border-slate-200">💪 Primary Action</td>
-                                        <td id="td-action" class="p-3 text-slate-600 leading-relaxed font-medium"></td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
+                    <!-- Translation Box Container -->
+                    <div id="dialect-translation-box" class="hidden bg-slate-900/60 border border-indigo-500/20 p-4 rounded-xl text-[11px] leading-relaxed text-slate-300 relative">
+                        <button onclick="document.getElementById('dialect-translation-box').classList.add('hidden')" class="absolute top-3 right-3 text-slate-500 hover:text-slate-300 text-xs">✕</button>
+                        <span id="dialect-badge" class="text-[8px] font-bold uppercase tracking-wider bg-indigo-500/20 text-indigo-400 px-1.5 py-0.5 rounded border border-indigo-500/30">TRANS</span>
+                        <p id="dialect-box-text" class="mt-2 font-medium leading-loose"></p>
+                    </div>
 
-                        <div class="bg-slate-50 border border-slate-200 p-3 rounded-xl space-y-1.5">
-                            <div class="flex justify-between items-center">
-                                <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">My Personal Lab Study Remarks & Mnemonics</label>
-                                <span id="notes-save-status" class="text-[9px] font-semibold text-emerald-600 hidden">✓ Saved</span>
+                    <!-- Structured Metrics Specification Grid -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <div class="p-4 bg-slate-900/40 border border-slate-900 rounded-2xl flex gap-3.5 items-start">
+                            <span class="w-8 h-8 rounded-xl bg-blue-500/10 border border-blue-500/20 text-blue-400 flex items-center justify-center text-xs shrink-0 font-bold">🎯</span>
+                            <div>
+                                <h4 class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Anatomical Origin Site</h4>
+                                <p id="metric-origin" class="text-xs text-slate-200 mt-1 leading-relaxed font-medium"></p>
                             </div>
-                            <textarea id="study-notes-area" oninput="saveStudyNote()" placeholder="Type custom study notes or memory tools for this muscle here (Saves automatically)..." class="w-full p-2 text-xs bg-white border border-slate-200 rounded-lg h-16 focus:outline-hidden focus:border-blue-500"></textarea>
+                        </div>
+                        <div class="p-4 bg-slate-900/40 border border-slate-900 rounded-2xl flex gap-3.5 items-start">
+                            <span class="w-8 h-8 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 flex items-center justify-center text-xs shrink-0 font-bold">📌</span>
+                            <div>
+                                <h4 class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Insertion Vector Terminal</h4>
+                                <p id="metric-insertion" class="text-xs text-slate-200 mt-1 leading-relaxed font-medium"></p>
+                            </div>
+                        </div>
+                        <div class="p-4 bg-slate-900/40 border border-slate-900 rounded-2xl flex gap-3.5 items-start">
+                            <span class="w-8 h-8 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center text-xs shrink-0 font-bold">⚡</span>
+                            <div>
+                                <h4 class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Neural Pathway Supply</h4>
+                                <p id="metric-innervation" class="text-xs text-emerald-400 mt-1 font-bold"></p>
+                            </div>
+                        </div>
+                        <div class="p-4 bg-slate-900/40 border border-slate-900 rounded-2xl flex gap-3.5 items-start">
+                            <span class="w-8 h-8 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-400 flex items-center justify-center text-xs shrink-0 font-bold">💪</span>
+                            <div>
+                                <h4 class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Functional Biomechanical Action</h4>
+                                <p id="metric-action" class="text-xs text-slate-200 mt-1 leading-relaxed font-medium"></p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Surgical Core High-Yield Notes Field -->
+                    <div id="surgical-notes-panel" class="p-4 bg-gradient-to-r from-slate-950 to-slate-900 border border-slate-900 rounded-2xl">
+                        <h4 class="text-[11px] font-bold tracking-wider text-white uppercase flex items-center gap-2">
+                            <span>🧬</span> Surgical & Micro-Ossification Analytics
+                        </h4>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3 text-[11px] text-slate-400 leading-relaxed font-medium">
+                            <div class="p-3 bg-slate-900/50 border border-slate-800/60 rounded-xl">
+                                <span class="font-bold text-blue-400 block mb-0.5">Development Architecture</span>
+                                The scapula bone structural frame builds dynamically over 7 individual operational ossification centers: 1 primary hub for the body array, and 6 extension centers.
+                            </div>
+                            <div class="p-3 bg-slate-900/50 border border-slate-800/60 rounded-xl">
+                                <span class="font-bold text-emerald-400 block mb-0.5">Vascular Layout Correlation</span>
+                                The suprascapular nerve routes downstream *below* the superior transverse ligament track, while the matching artery clears *above* the plane.
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <div id="panel-matrix" class="flex-1 overflow-auto p-4 hidden">
-                <div class="inline-block min-w-full align-middle border border-slate-200 rounded-xl overflow-hidden shadow-2xs">
-                    <table class="min-w-full divide-y divide-slate-200 text-xs text-left">
-                        <thead class="bg-slate-50 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                            <tr>
-                                <th class="p-3 border-r border-slate-200">Muscle</th>
-                                <th class="p-3 border-r border-slate-200">Origin Attachment</th>
-                                <th class="p-3 border-r border-slate-200">Insertion Point</th>
-                                <th class="p-3">Innervation</th>
-                            </tr>
-                        </thead>
-                        <tbody id="master-matrix-tbody" class="divide-y divide-slate-200 bg-white text-slate-600">
+            <!-- PANEL 2: UNIFIED GLOBAL DATA TABLE MATRIX -->
+            <div id="panel-matrix" class="flex-1 overflow-y-auto custom-scroll p-4 hidden">
+                <div class="border border-slate-900 rounded-xl bg-slate-900/20 overflow-hidden shadow-2xl">
+                    <div class="overflow-x-auto custom-scroll">
+                        <table class="w-full text-left border-collapse text-xs">
+                            <thead>
+                                <tr class="bg-slate-950 border-b border-slate-900 text-slate-400 font-bold uppercase tracking-wider text-[10px]">
+                                    <th class="p-4 min-w-[140px]">Muscle Model</th>
+                                    <th class="p-4 min-w-[200px]">Origin Architecture</th>
+                                    <th class="p-4 min-w-[200px]">Insertion Endpoint</th>
+                                    <th class="p-4 min-w-[160px]">Innervation Channel</th>
+                                </tr>
+                            </thead>
+                            <tbody id="matrix-table-body" class="divide-y divide-slate-900 text-slate-300 font-medium">
+                                <!-- Placed programmatically via data loop script -->
                             </tbody>
-                    </table>
+                        </table>
+                    </div>
                 </div>
             </div>
 
-            <div id="panel-flashcards" class="flex-1 overflow-y-auto p-6 hidden flex flex-col items-center justify-center space-y-4 bg-slate-50/40">
+            <!-- PANEL 3: ADAPTIVE SRS FLASHCARD DECK ENGINE -->
+            <div id="panel-flashcards" class="flex-1 overflow-y-auto custom-scroll p-6 hidden flex flex-col items-center justify-center space-y-6 bg-slate-950/40">
                 <div class="text-center">
-                    <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider">Active Spaced-Repetition Deck</h3>
-                    <p class="text-[11px] text-slate-500 mt-0.5">Click directly on the card box body to trigger a flip action and test your diagnostics memory mapping.</p>
+                    <span class="text-[10px] font-bold tracking-widest text-blue-500 bg-blue-500/10 px-3 py-1 rounded-full uppercase">Spaced-Repetition System (SRS)</span>
+                    <p class="text-xs text-slate-400 mt-2">Tap the canvas grid boundary area below to flip and inspect verified terminal values.</p>
                 </div>
 
-                <div onclick="flipFlashcard()" class="w-full max-w-sm h-48 cursor-pointer group">
-                    <div id="flashcard-inner-box" class="flashcard-inner w-full h-full relative border border-slate-200 rounded-2xl bg-white shadow-xs text-center p-6 flex flex-col items-center justify-center transition-all duration-300 group-hover:shadow-md">
-                        <div class="card-front absolute inset-0 p-6 flex flex-col items-center justify-center space-y-2">
-                            <span id="card-front-category" class="text-[9px] font-bold uppercase tracking-widest text-blue-600 bg-blue-50 px-2 py-0.5 rounded border border-blue-100">Category</span>
-                            <p id="card-front-text" class="text-sm font-bold text-slate-800 leading-relaxed"></p>
-                            <span class="text-[9px] text-slate-300 font-semibold pt-4 uppercase tracking-wider">🔄 Press Content Body To Flip</span>
+                <!-- 3D Interactive Card Flip Container Object -->
+                <div onclick="executeCardFlipAction()" class="w-full max-w-md h-56 perspective-frame cursor-pointer group">
+                    <div id="flashcard-physics-anchor" class="flashcard-inner-matrix w-full h-full relative border border-slate-800 rounded-2xl bg-slate-900/80 shadow-2xl flex flex-col items-center justify-center">
+                        
+                        <!-- Card Face Front Shield -->
+                        <div class="face-shield-front absolute inset-0 p-6 flex flex-col items-center justify-center space-y-4 text-center">
+                            <span id="flash-front-badge" class="text-[8px] font-bold uppercase tracking-widest text-indigo-400 bg-indigo-500/10 border border-indigo-500/20 px-2.5 py-1 rounded-md">Category Shield</span>
+                            <p id="flash-front-main-text" class="text-sm font-extrabold text-white tracking-tight leading-normal max-w-sm"></p>
+                            <span class="text-[10px] text-slate-500 font-medium italic group-hover:text-slate-400 transition">👆 Click anywhere to verify answer mapping</span>
                         </div>
-                        <div class="card-back absolute inset-0 p-6 bg-slate-900 text-white rounded-2xl flex flex-col items-center justify-center space-y-2">
-                            <span class="text-[9px] font-bold uppercase tracking-widest text-emerald-400 bg-emerald-950/80 px-2 py-0.5 rounded border border-emerald-900">VERIFIED ANSWER MATRIX</span>
-                            <p id="card-back-text" class="text-xs text-slate-200 leading-relaxed font-medium text-center"></p>
+
+                        <!-- Card Face Back Shield -->
+                        <div class="face-shield-back absolute inset-0 p-6 bg-gradient-to-br from-slate-900 via-slate-950 to-indigo-950 text-white rounded-2xl flex flex-col items-center justify-center space-y-3 text-center border border-indigo-500/30">
+                            <span class="text-[8px] font-bold uppercase tracking-widest text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded">VERIFIED CRITERIA ANCHOR</span>
+                            <p id="flash-back-main-text" class="text-xs text-slate-200 leading-relaxed font-semibold max-w-xs"></p>
                         </div>
                     </div>
                 </div>
 
+                <!-- Adaptive Deck Controller Configuration -->
                 <div class="flex items-center gap-2">
-                    <button onclick="handleConfidenceScore(false)" class="bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-700 font-bold text-xs px-3 py-1.5 rounded-lg transition cursor-pointer">❌ Forgot</button>
-                    <button onclick="handleConfidenceScore(true)" class="bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-700 font-bold text-xs px-3 py-1.5 rounded-lg transition cursor-pointer">✓ Got It</button>
-                    <button onclick="drawNextFlashcard()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs px-4 py-1.5 rounded-lg transition cursor-pointer">
-                        Next Card ➔
+                    <button onclick="drawNextSRSCard()" class="px-5 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition shadow-lg shadow-blue-600/10 cursor-pointer">
+                        Next Random Card ➔
                     </button>
                 </div>
             </div>
 
-            <div id="panel-quiz" class="flex-1 overflow-y-auto p-4 space-y-4 hidden">
-                <div class="bg-gradient-to-r from-slate-900 to-blue-950 rounded-xl p-4 text-white shadow-xs border border-blue-900 flex justify-between items-center">
-                    <div>
-                        <h3 class="font-bold text-xs md:text-sm tracking-wide text-blue-400 uppercase">Interactive Lab Competency Quiz</h3>
-                        <p class="text-xs text-slate-300 mt-0.5">Test your speed linking real functional biomechanical descriptions to the appropriate bone structural components.</p>
-                    </div>
-                    <div class="text-right shrink-0">
-                        <span class="text-[10px] text-slate-400 block font-bold">QUIZ SCORE</span>
-                        <span id="quiz-score-board" class="text-lg font-extrabold text-emerald-400">0/0</span>
-                    </div>
-                </div>
-                <div class="text-center">
-                    <button onclick="startNewQuizRound()" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs px-3.5 py-2.5 rounded-xl shadow-sm transition cursor-pointer">🎲 Roll Exam Item</button>
+            <!-- PANEL 4: BOARDS EXAM CORE QUIZ ENGINE -->
+            <div id="panel-quiz" class="flex-1 overflow-y-auto custom-scroll p-4 space-y-4 hidden">
+                <div class="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 rounded-2xl p-5 text-white shadow-xl">
+                    <h3 class="font-extrabold text-sm tracking-tight flex items-center gap-2">🎲 Adaptive Competitive Exam Arena</h3>
+                    <p class="text-[11px] text-blue-100 mt-1 max-w-md">Evaluates speed and accuracy mapping complex functional patterns or clinical boards descriptions back to correct master muscle arrays.</p>
+                    <button onclick="generateQuizChallenge()" class="mt-3.5 bg-white text-blue-600 font-extrabold text-[11px] px-4 py-2 rounded-xl transition cursor-pointer hover:bg-slate-50 shadow-md">Roll Random Exam Entry</button>
                 </div>
 
-                <div id="quiz-active-zone" class="hidden border border-slate-200 bg-slate-50/40 p-4 rounded-xl space-y-3">
+                <!-- Active Exam Field Section Area -->
+                <div id="quiz-active-viewport" class="hidden border border-slate-900 bg-slate-900/20 p-4 rounded-2xl space-y-4 animate-fade-in">
                     <div>
-                        <span class="text-[9px] font-bold bg-amber-100 text-amber-800 border border-amber-200 px-2 py-0.5 rounded-sm">QUESTION CRITERIA DESCRIPTION</span>
-                        <p id="quiz-question" class="text-xs font-semibold text-slate-700 mt-1 bg-white border border-slate-200 p-3 rounded-xl leading-relaxed"></p>
+                        <span class="text-[8px] font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20 px-2 py-0.5 rounded">EVALUATION TARGET MATRIX</span>
+                        <p id="quiz-question-prompt-text" class="text-xs font-bold text-slate-200 mt-2 bg-slate-950 border border-slate-900 p-4 rounded-xl leading-relaxed shadow-inner"></p>
                     </div>
-                    <div id="quiz-options-box" class="grid grid-cols-1 gap-1.5">
-                        </div>
-                    <div id="quiz-feedback-box" class="hidden text-xs font-bold p-2.5 rounded-lg text-center animate-pulse"></div>
+                    <div id="quiz-choices-dock" class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        <!-- Populated programmatically via runtime loop arrays -->
+                    </div>
+                    <div id="quiz-feedback-banner" class="hidden text-xs font-bold p-3.5 rounded-xl text-center shadow-xs animate-fade-in"></div>
                 </div>
             </div>
 
-            <div id="panel-qa" class="flex-1 overflow-y-auto p-4 space-y-4 hidden flex flex-col">
-                <div class="bg-slate-50 border border-slate-200 p-4 rounded-xl space-y-2">
-                    <h3 class="font-bold text-xs text-blue-600 tracking-wide uppercase">⚡ Direct Clinical Query Engine</h3>
-                    <p class="text-xs text-slate-500">Ask structural or functional questions directly about the scapular data matrix. Try querying terms like <em>"greater tubercle"</em>, <em>"abduction"</em>, or <em>"C5, C6"</em>.</p>
-                    
-                    <div class="flex gap-2 pt-1">
-                        <input id="qa-input" type="text" placeholder="Type an anatomy question (e.g., Which muscle initiates arm abduction?)..." class="flex-1 p-2 text-xs bg-white border border-slate-200 rounded-lg focus:outline-hidden focus:border-blue-500 font-medium" onkeyup="if(event.key === 'Enter') submitClinicalQuery()">
-                        <button onclick="submitClinicalQuery()" class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold px-4 py-2 rounded-lg transition cursor-pointer shrink-0">Ask Engine</button>
-                    </div>
-                    <div class="flex flex-wrap gap-1 pt-1 items-center">
-                        <span class="text-[9px] font-bold text-slate-400 uppercase">Suggestions:</span>
-                        <button onclick="fillAndSubmitQA('Which muscle inserts into lesser tubercle?')" class="text-[9px] font-medium bg-white text-slate-600 border border-slate-200 px-1.5 py-0.5 rounded hover:border-blue-400 transition cursor-pointer">Lesser Tubercle</button>
-                        <button onclick="fillAndSubmitQA('Long thoracic nerve innervation')" class="text-[9px] font-medium bg-white text-slate-600 border border-slate-200 px-1.5 py-0.5 rounded hover:border-blue-400 transition cursor-pointer">Long Thoracic</button>
-                        <button onclick="fillAndSubmitQA('What muscle does arm abduction?')" class="text-[9px] font-medium bg-white text-slate-600 border border-slate-200 px-1.5 py-0.5 rounded hover:border-blue-400 transition cursor-pointer">Abduction</button>
-                    </div>
+            <!-- PANEL 5: DISPATCH AI KNOWLEDGE DESK -->
+            <div id="panel-qa" class="flex-1 overflow-y-auto custom-scroll p-4 space-y-4 hidden flex flex-col">
+                <div class="bg-slate-900/40 border border-slate-900 p-4 rounded-2xl text-xs space-y-1 shadow-inner">
+                    <h3 class="font-bold text-white flex items-center gap-2">🧠 Clinical Knowledge Consultant</h3>
+                    <p class="text-slate-400 leading-normal">Query specific structural systems, clinical presentation models (e.g., nerve compression, shoulder dislocation mechanics), or borders. The local anatomy processor will resolve anomalies instantly.</p>
                 </div>
 
-                <div id="qa-response-zone" class="hidden flex-1 border border-slate-200 bg-white rounded-xl p-4 space-y-3 shadow-xs overflow-y-auto smooth-transition opacity-0 transform translate-y-2">
-                    <div class="border-b border-slate-100 pb-2 flex justify-between items-center">
-                        <span class="text-[10px] font-bold tracking-wider text-slate-400 uppercase">⚡ CRITICAL DIAGNOSTIC REPORT</span>
-                        <button id="qa-audio-btn" class="text-[10px] px-2 py-1 bg-slate-100 hover:bg-slate-200 border border-slate-200 rounded-md font-bold text-slate-600 cursor-pointer">🔊 Read Report</button>
-                    </div>
-                    <div id="qa-output-content" class="text-xs leading-relaxed text-slate-700 space-y-2 font-medium">
-                        </div>
+                <!-- Input Frame Setup Block -->
+                <div class="flex gap-2 shrink-0">
+                    <input id="qa-input-field" type="text" placeholder="e.g., What happens if long thoracic nerve is damaged? or List borders..." class="flex-1 p-3 text-xs bg-slate-950 border border-slate-800 rounded-xl focus:outline-none focus:border-blue-500 font-medium text-white transition shadow-inner" onkeydown="if(event.key === 'Enter') handleConsultQuery()">
+                    <button onclick="handleConsultQuery()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs px-5 py-2.5 rounded-xl transition cursor-pointer shadow-md">Consult</button>
+                </div>
+
+                <!-- Rapid Select Anchor Triggers -->
+                <div class="flex flex-wrap gap-1.5 shrink-0">
+                    <button onclick="runPreloadedQuery('What happens if long thoracic nerve is damaged?')" class="text-[10px] bg-slate-900/60 border border-slate-800 text-slate-300 px-3 py-1.5 rounded-lg hover:border-blue-500 hover:text-white transition cursor-pointer font-semibold">💡 Long Thoracic Deficit</button>
+                    <button onclick="runPreloadedQuery('What muscles form the Rotator Cuff?')" class="text-[10px] bg-slate-900/60 border border-slate-800 text-slate-300 px-3 py-1.5 rounded-lg hover:border-blue-500 hover:text-white transition cursor-pointer font-semibold">💡 Rotator Cuff Set</button>
+                    <button onclick="runPreloadedQuery('List the structures attaching to the Coracoid Process')" class="text-[10px] bg-slate-900/60 border border-slate-800 text-slate-300 px-3 py-1.5 rounded-lg hover:border-blue-500 hover:text-white transition cursor-pointer font-semibold">💡 Coracoid Attachments</button>
+                    <button onclick="runPreloadedQuery('Describe the borders and angles of scapula')" class="text-[10px] bg-slate-900/60 border border-slate-800 text-slate-300 px-3 py-1.5 rounded-lg hover:border-blue-500 hover:text-white transition cursor-pointer font-semibold">💡 Borders & Angles</button>
+                </div>
+
+                <!-- Display Resolution Panel Window -->
+                <div id="qa-result-box" class="hidden flex-1 border border-slate-900 bg-slate-950 p-4 rounded-2xl overflow-y-auto custom-scroll shadow-2xl">
+                    <span class="text-[8px] font-bold uppercase tracking-widest text-blue-400 bg-blue-500/10 border border-blue-500/20 px-2.5 py-1 rounded-md">Diagnostic Answer Matrix</span>
+                    <p id="qa-result-text" class="text-xs text-slate-300 leading-relaxed font-medium mt-3.5 whitespace-pre-line"></p>
                 </div>
             </div>
 
-            <footer class="p-2.5 border-t border-slate-200 text-center bg-slate-50 text-[10px] font-semibold text-slate-400 shrink-0">
-                Anatomical Clinical Framework Reference Engine • Scapula Lab Suite 
+            <!-- Global Footer Element Branding -->
+            <footer class="p-3.5 border-t border-slate-900 bg-slate-950 text-center text-[9px] font-bold text-slate-500 uppercase tracking-widest shrink-0 mt-auto">
+                Anatomatrix Architecture Core Engine • Immersive Data System Configuration
             </footer>
-        </div>
+        </main>
     </div>
 
+    <!-- Core Operations Data Framework Script -->
     <script>
-        // Core Anatomy Master Dataset Map
-        const dataMatrix = {
+        // Dual-state master dataset engine configuration
+        let currentModeState = "classic"; // classic or clinical
+        
+        const coreAnatomyDataset = {
             supraspinatus: {
                 name: "Supraspinatus",
                 group: "Rotator Cuff",
                 origin: "Supraspinous fossa of the scapula (medial 2/3rds area).",
                 insertion: "Superior facet of the greater tubercle of the humerus.",
-                innervation: "Suprascapular nerve (Spinal roots C5, C6).",
-                action: "Initiates arm abduction (first 15 degrees); pulls humerus into glenoid socket."
+                innervation: "Suprascapular nerve (C5, C6).",
+                action: "Initiates arm abduction (first 15 degrees); pulls humerus into glenoid socket.",
+                clinical: "An elite tennis player experiences severe sharp pain during the initial phase of arm elevation overhead. Magnetic Resonance Imaging confirms a partial tear within the musculotendinous junction matching the supraspinous fossa line.",
+                explanations: {
+                    hi: "यह मांसपेशी कंधे की Supraspinous Fossa से शुरू होती है। इसका मुख्य काम हाथ को बाहर की तरफ ऊपर उठाने की शुरुआत करना है (पहले 15 डिग्री तक)। यह कंधे के जोड़ को स्थिरता देती है।",
+                    bn: "এই পেশীটি স্ক্যাপুলার Supraspinous Fossa থেকে উৎপন্ন হয়। এর প্রধান কাজ হলো হাতটিকে বাইরের দিকে ওপরে তোলার প্রক্রিয়া শুরু করা (প্রথম ১৫ ডিগ্রি)। এটি কাঁধের জয়েন্টকে স্থিতিশীল রাখে।"
+                }
             },
             infraspinatus: {
                 name: "Infraspinatus",
                 group: "Rotator Cuff",
                 origin: "Infraspinous fossa of the scapula (occupies the major posterior expanse).",
                 insertion: "Middle facet of the greater tubercle of the humerus.",
-                innervation: "Suprascapular nerve (Spinal roots C5, C6).",
-                action: "Primary lateral (external) rotator of the arm; stabilizes shoulder joint capsule."
+                innervation: "Suprascapular nerve (C5, C6).",
+                action: "Primary lateral (external) rotator of the arm; stabilizes shoulder joint capsule.",
+                clinical: "A patient presents with marked weakness when attempting to rotate their arm outward against resistance. Electrodiagnostic testing indicates selective nerve entrapment at the spinoglenoid notch level.",
+                explanations: {
+                    hi: "यह स्कैपुला के पीछे वाले हिस्से (Infraspinous Fossa) से निकलती है। इसका मुख्य कार्य हाथ को बाहर की ओर घुमाना (Lateral Rotation) है।",
+                    bn: "এটি স্ক্যাপুলার পেছনের অংশ (Infraspinous Fossa) থেকে উৎপন্ন হয়। এর প্রধান কাজ হলো হাতকে বাইরের দিকে ঘোরানো (Lateral Rotation) এবং কাঁধ সুরক্ষিত রাখা।"
+                }
             },
             subscapularis: {
                 name: "Subscapularis",
                 group: "Rotator Cuff",
                 origin: "Subscapular fossa (the entire anterior/costal surface facing ribs).",
                 insertion: "Lesser tubercle of the humerus.",
-                innervation: "Upper and lower subscapular nerves (Spinal roots C5, C6, C7).",
-                action: "Primary medial (internal) rotator of the arm; prevents anterior displacement."
+                innervation: "Upper and lower subscapular nerves (C5, C6, C7).",
+                action: "Primary medial (internal) rotator of the arm; prevents anterior displacement.",
+                clinical: "Following a traumatic anterior shoulder dislocation event, a patient displays a positive 'Gerber Lift-Off' test result, indicating failure or tearing of the muscle structural face coating the costal bone surface.",
+                explanations: {
+                    hi: "यह मांसपेशी स्कैपुला के आगे वाले हिस्से (जो पसलियों की तरफ होता है) से शुरू होती है। यह हाथ को अंदर की तरफ घुमाने (Internal Rotation) में मदद करती है।",
+                    bn: "এই পেশীটি স্ক্যাপুলার সামনের অংশ (যা পাঁজরের দিকে থাকে) থেকে উৎপন্ন হয়। এটি হাতকে ভেতরের দিকে ঘোরাতে (Medial Rotation) সাহায্য করে।"
+                }
             },
             teres_minor: {
                 name: "Teres Minor",
                 group: "Rotator Cuff",
                 origin: "Upper 2/3rds of the lateral border/margin on posterior scapula face.",
                 insertion: "Inferior facet of the greater tubercle of the humerus.",
-                innervation: "Axillary nerve (Spinal root fibers C5, C6).",
-                action: "Laterally rotates the arm and assists in arm adduction maneuvers."
+                innervation: "Axillary nerve (C5, C6).",
+                action: "Laterally rotates the arm and assists in arm adduction maneuvers.",
+                clinical: "An individual sustains a humeral neck fracture leading to downstream atrophy of the lateral border muscle profile. Sensory loss is verified across the military patch zone over the lateral deltoid.",
+                explanations: {
+                    hi: "यह स्कैपुला के बाहरी किनारे (Lateral Border) के ऊपरी हिस्से से निकलती है। यह Axillary Nerve द्वारा नियंत्रित होती है और हाथ को बाहर घुमाती है।",
+                    bn: "এটি স্ক্যাপুলার বাইরের ধারের (Lateral Border) ওপরের অংশ থেকে উৎপন্ন হয়। এটি হাতকে বাইরের দিকে ঘোরাতে সাহায্য করে এবং অ্যাক্সিলারি নার্ভ দ্বারা নিয়ন্ত্রিত হয়।"
+                }
             },
             teres_major: {
                 name: "Teres Major",
                 group: "Scapulohumeral",
                 origin: "Posterior aspect of the inferior angle point of the scapula.",
                 insertion: "Medial lip of the intertubercular sulcus (bicipital groove) of the humerus.",
-                innervation: "Lower subscapular nerve (Spinal root fibers C5, C6, T1).",
-                action: "Adducts, extends, and medially rotates the arm at the shoulder glenohumeral joint."
+                innervation: "Lower subscapular nerve (C5, C6, T1).",
+                action: "Adducts, extends, and medially rotates the arm at the shoulder joint.",
+                clinical: "A swimmer struggles with powerful downward pulling strokes. Structural evaluations note localized performance drop off along the inferior angle biomechanical pathway heading to the bicipital groove.",
+                explanations: {
+                    hi: "यह स्कैपुला के सबसे निचले कोने (Inferior Angle) से शुरू होती है और हाथ को पीछे खींचने और अंदर की तरफ मोड़ने में मदद करती है।",
+                    bn: "এটি স্ক্যাপুলার নিচের কোণ (Inferior Angle) থেকে শুরু হয় এবং হাতকে ভেতরের দিকে ঘোরাতে ও পেছনে টানতে সাহায্য করে।"
+                }
             },
             serratus_anterior: {
                 name: "Serratus Anterior",
                 group: "Axioappendicular",
                 origin: "Fleshy slips from the outer surfaces of upper 8 or 9 ribs.",
                 insertion: "Anterior costal aspect of the entire medial border length of the scapula.",
-                innervation: "Long thoracic nerve (Spinal root levels C5, C6, C7).",
-                action: "Protracts and rotates scapula upward; holds bone securely flush against rib wall."
+                innervation: "Long thoracic nerve (C5, C6, C7).",
+                action: "Protracts and rotates scapula upward; holds bone securely flush against rib wall.",
+                clinical: "Following a radical mastectomy procedure, a patient notices that their vertebral border protrudes sharply whenever they attempt to push forward with their arms against a solid vertical resistance panel.",
+                explanations: {
+                    hi: "इसे 'Boxer's Muscle' भी कहते हैं। यह पसलियों से शुरू होकर स्कैपुला के अंदरूनी किनारे पर जुड़ती है। यह हड्डी को छाती की दीवार से चिपकाए रखती है। इसकी खराबी से 'Winging of Scapula' होता है।",
+                    bn: "একে 'Boxer's Muscle'-ও বলা হয়। এটি পাঁজর থেকে উৎপন্ন হয়ে স্ক্যাপুলার ভেতরের প্রান্তে যুক্ত হয়। এটি স্ক্যাপুলাকে বুকের খাঁচার সাথে ধরে রাখে। এটি ক্ষতিগ্রস্ত হলে 'Winging of Scapula' হয়।"
+                }
             }
         };
 
-        let currentActiveKey = "";
-        const readTracker = new Set();
-        
-        // Extended Performance Metric Trackers
-        let streakCounter = 0;
-        let totalQuizAnswers = 0;
-        let correctQuizAnswers = 0;
+        const offlineHotspotDirectory = {
+            glenoid: { title: "Glenoid Cavity Articular Hub", text: "A shallow, pyriform articular surface located at the lateral angle configuration. Receives the large head of the humerus to construct the glenohumeral dynamic shell. Margins provide the structural foundation for the fibrocartilaginous glenoid labrum matrix." },
+            coracoid: { title: "Coracoid Process Anchor System", text: "A thick, hook-shaped forward-directed architectural process emerging from the superior margin of the neck asset. Essential insertion terminal site for Pectoralis Minor, and the muscular origin zone for both the Short Head of Biceps Brachii and Coracobrachialis." },
+            spine: { title: "Scapular Spine Shelf Wall", text: "A highly prominent asymmetrical plate separating the posterior dorsal surface layout. Terminates laterally into the flat expanded Acromion process. Serves as structural origins for supraspinous tracking and anchoring parameters." },
+            medial: { title: "Medial Vertebral Border Lane", text: "The longest structural perimeter border running parallel to the thoracic spinous framework. Acts as an extensive anchor landing zone for the complete Serratus Anterior track on its costal side face, along with Rhomboid profiles posteriorly." }
+        };
 
-        // Initialize Application
-        buildSelectionChips();
-        populateMasterMatrixTable();
-        drawNextFlashcard();
+        const offlineConsultationDirectory = [
+            { keywords: ["long thoracic", "winging", "serratus", "damage", "injury"], answer: "⚠️ CLINICAL CORRELATION: Winging of Scapula\n\nWhen the Long Thoracic Nerve (C5-C7) is damaged, the Serratus Anterior muscle becomes paralyzed. As a result, the medial border and inferior angle of the scapula project backwards like a wing when the patient attempts to push against a wall.\n\nKey Deficits:\n• Loss of scapular protraction mechanics.\n• Inability to abduct the arm past horizontal (90°) due to compromised upward glenoid rotation." },
+            { keywords: ["rotator cuff", "cuff", "sits", "stabilize"], answer: "🛡️ ROTATOR CUFF MATRIX (SITS Muscles):\n\nThe Rotator Cuff comprises 4 essential muscles originating from the scapula and inserting onto the humerus tubercles:\n1. Supraspinatus: Initiates abduction (0-15°).\n2. Infraspinatus: Main external/lateral rotator.\n3. Teres Minor: Lateral rotation and stabilization assistance.\n4. Subscapularis: Sits on the anterior costal face; works as primary internal/medial rotator.\n\nFunction: Forms a dynamic regulatory sleeve that pulls the humerus head snuggly into the glenoid cavity." },
+            { keywords: ["coracoid", "process", "biceps", "pectoralis minor"], answer: "🪝 CORACOID PROCESS STRUCTURAL MAPPINGS:\n\nThe coracoid process acts as an anchor for crucial upper limb anatomy:\n\nMuscular Attachments:\n• Origin of Short Head of Biceps Brachii.\n• Origin of Coracobrachialis muscle.\n• Insertion of Pectoralis Minor muscle (stabilizing anterior wall).\n\nLigamentous Anchor points:\n• Coracoclavicular ligament (Conoid and Trapezoid lines).\n• Coracoacromial ligament." },
+            { keywords: ["border", "angle", "surface", "landmarks", "fossa"], answer: "🦴 OSTEOLOGICAL LANDMARKS MATRIX:\n\nSurfaces:\n• Costal (Anterior): Features the concave Subscapular Fossa.\n• Dorsal (Posterior): Split by the prominent Scapular Spine into the Supraspinous Fossa and Infraspinous Fossa.\n\nBorders & Angles:\n• Medial (Vertebral) Border: Extensive line where Serratus Anterior, Rhomboids, and Levator Scapulae land.\n• Lateral (Axillary) Border: Thick margin containing Teres Minor and Major tracks.\n• Superior Border: Shortest edge; marks the location of the Suprascapular Notch." }
+        ];
 
-        // 1. Build and Populate Selection Control Pills
-        function buildSelectionChips() {
-            const container = document.getElementById('chip-container');
-            container.innerHTML = '';
-            
-            Object.keys(dataMatrix).forEach(key => {
-                const item = dataMatrix[key];
-                const chip = document.createElement('button');
-                chip.className = `chip-item text-[11px] font-semibold px-3 py-1.5 rounded-lg border border-slate-200 bg-white hover:border-blue-500 hover:text-blue-600 text-slate-600 transition cursor-pointer shrink-0 shadow-2xs`;
-                chip.id = `chip-${key}`;
-                chip.innerText = item.name;
-                chip.onclick = () => runDiagnosticScanLoad(key);
-                container.appendChild(chip);
-            });
-        }
+        let activeMuscleKey = "";
+        const trackingMasterySet = new Set();
 
-        // 2. Tab Views Router Controller
-        function switchTab(tabId) {
-            const tabs = ['explore', 'matrix', 'flashcards', 'quiz', 'qa'];
-            tabs.forEach(t => {
-                document.getElementById(`tab-${t}`).classList.remove('active-tab');
+        // 1. App Navigation Route Management
+        function routeTab(tabId) {
+            ['explore', 'matrix', 'flashcards', 'quiz', 'qa'].forEach(t => {
+                document.getElementById(`tab-${t}`).className = "px-6 py-4.5 text-slate-400 hover:text-white font-bold transition cursor-pointer whitespace-nowrap border-b-2 border-transparent";
                 document.getElementById(`panel-${t}`).classList.add('hidden');
             });
-            document.getElementById(`tab-${tabId}`).classList.add('active-tab');
+            document.getElementById(`tab-${tabId}`).className = "px-6 py-4.5 text-blue-400 hover:text-blue-300 font-extrabold transition cursor-pointer whitespace-nowrap border-b-2 border-blue-500 bg-slate-900/20";
             document.getElementById(`panel-${tabId}`).classList.remove('hidden');
         }
 
-        // 3. Diagnostic Scanner Loading Animation Trigger
-        function runDiagnosticScanLoad(key) {
-            const loader = document.getElementById('radar-loading-overlay');
-            loader.classList.remove('hidden');
+        // 2. Global Dataset State Toggle Engine
+        function toggleDatasetMode(targetMode) {
+            currentModeState = targetMode;
+            document.getElementById('mode-classic').className = targetMode === 'classic' ? 'px-3 py-1.5 rounded-lg text-[11px] font-bold tracking-wide transition cursor-pointer bg-blue-600 text-white shadow-xs' : 'px-3 py-1.5 rounded-lg text-[11px] font-bold tracking-wide transition cursor-pointer text-slate-400 hover:text-white';
+            document.getElementById('mode-clinical').className = targetMode === 'clinical' ? 'px-3 py-1.5 rounded-lg text-[11px] font-bold tracking-wide transition cursor-pointer bg-blue-600 text-white shadow-xs' : 'px-3 py-1.5 rounded-lg text-[11px] font-bold tracking-wide transition cursor-pointer text-slate-400 hover:text-white';
             
-            setTimeout(() => {
-                loader.classList.add('hidden');
-                viewMuscleDetails(key);
-            }, 750);
+            buildMuscleDockPills();
+            if (activeMuscleKey) {
+                renderTargetMuscleMetrics(activeMuscleKey);
+            }
         }
 
-        // 4. Populate Structural Rows with Target Properties Matrix (0.30s Smooth Transition Implementation)
-        function viewMuscleDetails(key) {
-            currentActiveKey = key;
-            const data = dataMatrix[key];
-            if (!data) return;
-
-            document.querySelectorAll('.chip-item').forEach(el => {
-                el.classList.remove('bg-blue-600', 'text-white', 'border-blue-600');
-                el.classList.add('bg-white', 'text-slate-600', 'border-slate-200');
+        // 3. Render Selection Pill Objects Row Dynamically
+        function buildMuscleDockPills() {
+            const dock = document.getElementById('pill-dock-container');
+            dock.innerHTML = '';
+            
+            Object.keys(coreAnatomyDataset).forEach(key => {
+                const item = coreAnatomyDataset[key];
+                const pillButton = document.createElement('button');
+                pillButton.id = `dock-pill-${key}`;
+                pillButton.className = "px-4 py-2.5 rounded-xl border border-slate-800 bg-slate-900/60 hover:border-slate-700 text-slate-300 font-bold text-[11px] transition cursor-pointer whitespace-nowrap shrink-0 shadow-sm";
+                pillButton.innerText = currentModeState === 'clinical' ? `⚡ Case: ${item.name}` : item.name;
+                pillButton.onclick = () => renderTargetMuscleMetrics(key);
+                dock.appendChild(pillButton);
             });
-            const targetChip = document.getElementById(`chip-${key}`);
-            if (targetChip) {
-                targetChip.classList.remove('bg-white', 'text-slate-600', 'border-slate-200');
-                targetChip.classList.add('bg-blue-600', 'text-white', 'border-blue-600');
+        }
+
+        // 4. Update the Anatomy Workspace with Specific Selected Muscle Profile
+        function renderTargetMuscleMetrics(key) {
+            const targetData = coreAnatomyDataset[key];
+            if (!targetData) return;
+            activeMuscleKey = key;
+            document.getElementById('dialect-translation-box').classList.add('hidden');
+
+            document.querySelectorAll("[id^='dock-pill-']").forEach(el => {
+                el.className = "px-4 py-2.5 rounded-xl border border-slate-800 bg-slate-900/60 hover:border-slate-700 text-slate-300 font-bold text-[11px] transition cursor-pointer whitespace-nowrap shrink-0 shadow-sm";
+            });
+            const selectedPill = document.getElementById(`dock-pill-${key}`);
+            if (selectedPill) {
+                selectedPill.className = "px-4 py-2.5 rounded-xl border border-blue-500/30 bg-blue-600 text-white font-extrabold text-[11px] transition cursor-pointer whitespace-nowrap shrink-0 shadow-md shadow-blue-500/10";
             }
 
-            document.getElementById('no-selection-prompt').classList.add('hidden');
-            
-            const tableContainer = document.getElementById('table-display-container');
-            tableContainer.classList.remove('hidden');
-            
-            // Execute 0.30-second smooth transition state modification
-            tableContainer.classList.remove('opacity-0', 'translate-y-2');
-            tableContainer.classList.add('opacity-100', 'translate-y-0');
+            document.getElementById('empty-state-card').classList.add('hidden');
+            document.getElementById('active-data-card').classList.remove('hidden');
 
-            document.getElementById('meta-muscle-name').innerText = data.name;
-            document.getElementById('meta-muscle-group').innerText = `${data.group} Functional Group`;
-            document.getElementById('td-origin').innerText = data.origin;
-            document.getElementById('td-insertion').innerText = data.insertion;
-            document.getElementById('td-innervation').innerText = data.innervation;
-            document.getElementById('td-action').innerText = data.action;
-
-            document.getElementById('study-notes-area').value = localStorage.getItem(`note_${key}`) || "";
-
-            readTracker.add(key);
-            const totalElements = Object.keys(dataMatrix).length;
-            document.getElementById('global-tracker-tag').innerText = `${readTracker.size}/${totalElements} Explored`;
-            
-            const percentage = Math.round((readTracker.size / totalElements) * 100);
-            document.getElementById('mastery-percent').innerText = `${percentage}%`;
-            document.getElementById('mastery-bar').style.width = `${percentage}%`;
-        }
-
-        // 5. String Query Filtering Engine
-        function filterMuscles() {
-            const query = document.getElementById('search-bar').value.toLowerCase();
-            Object.keys(dataMatrix).forEach(key => {
-                const item = dataMatrix[key];
-                const chip = document.getElementById(`chip-${key}`);
-                if (chip) {
-                    if (item.name.toLowerCase().includes(query) || item.group.toLowerCase().includes(query)) {
-                        chip.classList.remove('hidden');
-                    } else {
-                        chip.classList.add('hidden');
-                    }
-                }
-            });
-        }
-
-        // Smart Structural Group Filtering Logic Module
-        function filterByGroup(groupName) {
-            Object.keys(dataMatrix).forEach(key => {
-                const item = dataMatrix[key];
-                const chip = document.getElementById(`chip-${key}`);
-                if (chip) {
-                    if (groupName === 'all' || item.group === groupName) {
-                        chip.classList.remove('hidden');
-                    } else {
-                        chip.classList.add('hidden');
-                    }
-                }
-            });
-        }
-
-        // 6. Audio Engine Synthesis API: Comprehensive Profile Audio Scan
-        function pronounceActiveMuscle() {
-            if (!currentActiveKey || !('speechSynthesis' in window)) return;
-            window.speechSynthesis.cancel();
-            
-            const data = dataMatrix[currentActiveKey];
-            const textToSpeak = `
-                Anatomical profile scan for ${data.name}. 
-                Functional Group: ${data.group}. 
-                Origin point: ${data.origin} 
-                Insertion point: ${data.insertion} 
-                Nerve Innervation: ${data.innervation} 
-                Primary Biomechanical Action: ${data.action}
-            `;
-            
-            const utterance = new SpeechSynthesisUtterance(textToSpeak);
-            utterance.rate = 0.88;
-            window.speechSynthesis.speak(utterance);
-        }
-
-        // 7. Local Storage Notes Utility with Active UI Save Feedback Indicator
-        function saveStudyNote() {
-            if (!currentActiveKey) return;
-            const text = document.getElementById('study-notes-area').value;
-            localStorage.setItem(`note_${currentActiveKey}`, text);
-            
-            const indicator = document.getElementById('notes-save-status');
-            indicator.classList.remove('hidden');
-            setTimeout(() => {
-                indicator.classList.add('hidden');
-            }, 1000);
-        }
-
-        // 8. Master Compilation Grid Population Utility
-        function populateMasterMatrixTable() {
-            const tbody = document.getElementById('master-matrix-tbody');
-            tbody.innerHTML = '';
-            Object.keys(dataMatrix).forEach(key => {
-                const m = dataMatrix[key];
-                const row = document.createElement('tr');
-                row.className = "hover:bg-slate-50 border-b border-slate-100 transition cursor-pointer";
-                row.onclick = () => {
-                    switchTab('explore');
-                    runDiagnosticScanLoad(key);
-                };
-                row.innerHTML = `
-                    <td class="p-2.5 font-bold text-blue-600 hover:underline border-r border-slate-200 bg-slate-50/40">🔗 ${m.name}</td>
-                    <td class="p-2.5 border-r border-slate-200 leading-normal">${m.origin}</td>
-                    <td class="p-2.5 border-r border-slate-200 leading-normal">${m.insertion}</td>
-                    <td class="p-2.5 text-slate-700 font-semibold">${m.innervation}</td>
-                `;
-                tbody.appendChild(row);
-            });
-        }
-
-        // 9. Flashcard Animation & Competency Streak Tracker Mechanics
-        function flipFlashcard() {
-            document.getElementById('flashcard-inner-box').classList.toggle('flipped');
-        }
-
-        function handleConfidenceScore(isCorrect) {
-            if (isCorrect) {
-                streakCounter++;
+            const teaserElement = document.getElementById('view-vignette-teaser');
+            if (currentModeState === 'clinical') {
+                document.getElementById('view-muscle-header').innerText = `Clinical File: ${targetData.name}`;
+                teaserElement.innerText = `📋 Case Vignette study: "${targetData.clinical}"`;
+                teaserElement.classList.remove('hidden');
             } else {
-                streakCounter = 0;
+                document.getElementById('view-muscle-header').innerText = targetData.name;
+                teaserElement.classList.add('hidden');
             }
-            document.getElementById('streak-count').innerText = streakCounter;
-            drawNextFlashcard();
+
+            document.getElementById('view-muscle-badge').innerText = targetData.group;
+            document.getElementById('metric-origin').innerText = targetData.origin;
+            document.getElementById('metric-insertion').innerText = targetData.insertion;
+            document.getElementById('metric-innervation').innerText = targetData.innervation;
+            document.getElementById('metric-action').innerText = targetData.action;
+
+            // Increment Mastery Session Counter Statistics
+            trackingMasterySet.add(key);
+            const globalPercent = Math.round((trackingMasterySet.size / Object.keys(coreAnatomyDataset).length) * 100);
+            document.getElementById('global-mastery-text').innerText = `${globalPercent}% Mastered`;
+            document.getElementById('global-mastery-bar').style.width = `${globalPercent}%`;
         }
 
-        function drawNextFlashcard() {
-            document.getElementById('flashcard-inner-box').classList.remove('flipped');
-            const keys = Object.keys(dataMatrix);
-            const chosenKey = keys[Math.floor(Math.random() * keys.length)];
-            const matrixItem = dataMatrix[chosenKey];
-
-            const configurations = [
-                { title: "ORIGIN PROFILE CONFIGURATION", query: `Where is the anatomical origin marker zone for the [${matrixItem.name}]?`, answer: matrixItem.origin },
-                { title: "NERVE PATHWAY CONNECTION", query: `Identify the correct spinal root innervation pathway for the [${matrixItem.name}] muscle.`, answer: matrixItem.innervation }
-            ];
-            const activeConfig = configurations[Math.floor(Math.random() * configurations.length)];
-
-            setTimeout(() => {
-                document.getElementById('card-front-category').innerText = activeConfig.title;
-                document.getElementById('card-front-text').innerText = activeConfig.query;
-                document.getElementById('card-back-text').innerText = activeConfig.answer;
-            }, 150);
+        // 5. Dynamic Regional Explanation Framework Sub-Engine
+        function toggleDialectMenu() {
+            document.getElementById('dialect-menu-dropdown').classList.toggle('hidden');
         }
-
-        // 10. Interactive Exam Logic with Persistent Scoring Metric Matrix
-        let targetQuizAnswer = "";
-        function startNewQuizRound() {
-            const keys = Object.keys(dataMatrix);
-            const chosenKey = keys[Math.floor(Math.random() * keys.length)];
-            const quizItem = dataMatrix[chosenKey];
-            targetQuizAnswer = chosenKey;
-
-            document.getElementById('quiz-question').innerHTML = `<strong>Which muscular profile maps matching this primary kinetic action description?</strong><br>• <span class="text-slate-600 font-medium">${quizItem.action}</span>`;
+        function deployDialectTranslation(langCode) {
+            document.getElementById('dialect-menu-dropdown').classList.add('hidden');
+            if (!activeMuscleKey) return;
             
-            const optionsBox = document.getElementById('quiz-options-box');
-            optionsBox.innerHTML = '';
-
-            const shuffledOptions = [...keys].sort(() => 0.5 - Math.random());
-            shuffledOptions.forEach(k => {
-                const btn = document.createElement('button');
-                btn.className = "w-full text-left p-2.5 text-xs font-semibold bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition cursor-pointer flex justify-between items-center group";
-                btn.innerHTML = `<span>➔ ${dataMatrix[k].name}</span> <span class="text-[10px] text-slate-400 opacity-0 group-hover:opacity-100 transition">Select Choice</span>`;
-                btn.onclick = () => {
-                    totalQuizAnswers++;
-                    const fb = document.getElementById('quiz-feedback-box');
-                    fb.classList.remove('hidden', 'bg-emerald-100', 'text-emerald-800', 'bg-rose-100', 'text-rose-800');
-                    if (k === targetQuizAnswer) {
-                        correctQuizAnswers++;
-                        fb.innerText = "🎉 Splendid! That maps out perfectly to the target action profile.";
-                        fb.classList.add('bg-emerald-100', 'text-emerald-800');
-                    } else {
-                        fb.innerText = `❌ Incorrect. That specific vector tracks back to the ${dataMatrix[targetQuizAnswer].name}.`;
-                        fb.classList.add('bg-rose-100', 'text-rose-800');
-                    }
-                    document.getElementById('quiz-score-board').innerText = `${correctQuizAnswers}/${totalQuizAnswers}`;
-                };
-                optionsBox.appendChild(btn);
-            });
-
-            document.getElementById('quiz-feedback-box').classList.add('hidden');
-            document.getElementById('quiz-active-zone').classList.remove('hidden');
+            const targetData = coreAnatomyDataset[activeMuscleKey];
+            document.getElementById('dialect-badge').innerText = langCode === 'hi' ? "Hindi (हिंदी) Summary" : "Bengali (বাংলা) Summary";
+            document.getElementById('dialect-box-text').innerText = targetData.explanations[langCode];
+            document.getElementById('dialect-translation-box').classList.remove('hidden');
         }
 
-        // 11. Custom Clinical Q&A Core Engine Mechanics
-        function fillAndSubmitQA(text) {
-            document.getElementById('qa-input').value = text;
-            submitClinicalQuery();
+        // Close language menu clicking out automatically
+        window.addEventListener('click', (e) => {
+            if (!e.target.closest('#panel-explore')) return;
+            if (!e.target.innerText.includes('Explanation Menu')) {
+                const drop = document.getElementById('dialect-menu-dropdown');
+                if (drop) drop.classList.add('hidden');
+            }
+        });
+
+        // 6. Speech Narration Core Module API
+        function dispatchAudioSynthesis() {
+            if (!activeMuscleKey || !('speechSynthesis' in window)) return;
+            window.speechSynthesis.cancel();
+            const src = coreAnatomyDataset[activeMuscleKey];
+            const textString = currentModeState === 'clinical' 
+                ? `Clinical Summary for ${src.name}. ${src.clinical}` 
+                : `${src.name} profile. Nerve channel: ${src.innervation}. Action: ${src.action}`;
+            
+            const utteranceObj = new SpeechSynthesisUtterance(textString);
+            utteranceObj.rate = 0.95;
+            window.speechSynthesis.speak(utteranceObj);
         }
 
-        function submitClinicalQuery() {
-            const rawQuery = document.getElementById('qa-input').value.trim();
-            if (!rawQuery) return;
+        // 7. Hotspot Interaction HUD Core Logic
+        function triggerHotspot(id) {
+            const displayPanel = document.getElementById('hotspot-display');
+            const entry = offlineHotspotDirectory[id];
+            if (!entry) return;
 
-            const query = rawQuery.toLowerCase();
-            let matches = [];
+            document.getElementById('hotspot-title').innerText = entry.title;
+            document.getElementById('hotspot-text').innerText = entry.text;
+            displayPanel.classList.remove('hidden');
+        }
 
-            // Scan matrix properties to establish logical connection mappings
-            Object.keys(dataMatrix).forEach(key => {
-                const m = dataMatrix[key];
-                let weight = 0;
-
-                if (query.includes(m.name.toLowerCase())) weight += 10;
-                if (query.includes(m.group.toLowerCase())) weight += 4;
-                if (m.origin.toLowerCase().includes(query) || query.includes("origin")) { if(m.origin.toLowerCase().includes(query)) weight += 5; }
-                if (m.insertion.toLowerCase().includes(query) || query.includes("insertion")) { if(m.insertion.toLowerCase().includes(query)) weight += 5; }
-                if (m.innervation.toLowerCase().includes(query) || query.includes("nerve") || query.includes("innervation")) { if(m.innervation.toLowerCase().includes(query)) weight += 5; }
-                if (m.action.toLowerCase().includes(query) || query.includes("action") || query.includes("do")) { if(m.action.toLowerCase().includes(query)) weight += 5; }
-
-                if (weight > 0) {
-                    matches.push({ key, weight });
+        // 8. Live String Query Search Controller Engine
+        function executeMuscleSearch() {
+            const val = document.getElementById('search-filter-input').value.toLowerCase();
+            Object.keys(coreAnatomyDataset).forEach(key => {
+                const matchObj = coreAnatomyDataset[key];
+                const buttonElement = document.getElementById(`dock-pill-${key}`);
+                if (buttonElement) {
+                    const isVisible = matchObj.name.toLowerCase().includes(val) || matchObj.group.toLowerCase().includes(val);
+                    buttonElement.className = isVisible ? buttonElement.className.replace('hidden', '').trim() : `${buttonElement.className} hidden`;
                 }
             });
+        }
 
-            const outputZone = document.getElementById('qa-response-zone');
-            const outputBox = document.getElementById('qa-output-content');
-            
-            outputZone.classList.remove('hidden');
-            // Force 0.30s animation update
-            setTimeout(() => {
-                outputZone.classList.remove('opacity-0', 'translate-y-2');
-                outputZone.classList.add('opacity-100', 'translate-y-0');
-            }, 10);
-
-            if (matches.length === 0) {
-                outputBox.innerHTML = `
-                    <p class="text-rose-600 font-bold">⚠️ No conclusive clinical data found mapping your query parameters.</p>
-                    <p class="text-slate-500 text-[11px] mt-1">Try optimizing your request structure by targeting explicit keywords present within our osteological profile matrices (e.g., specific muscle names, root vectors like C5, or landmarks like fossa).</p>
+        // 9. Generate Matrix Table dynamic code insertion blocks
+        function constructGlobalMatrixTableRows() {
+            const tableBody = document.getElementById('matrix-table-body');
+            tableBody.innerHTML = '';
+            Object.keys(coreAnatomyDataset).forEach(key => {
+                const rowData = coreAnatomyDataset[key];
+                const elementRow = document.createElement('tr');
+                elementRow.className = "hover:bg-slate-900/40 transition border-b border-slate-900";
+                elementRow.innerHTML = `
+                    <td class="p-4 font-bold text-white bg-slate-950/20">${rowData.name}<span class="block text-[9px] text-slate-500 font-medium">${rowData.group}</span></td>
+                    <td class="p-4 text-slate-400 leading-normal">${rowData.origin}</td>
+                    <td class="p-4 text-slate-400 leading-normal">${rowData.insertion}</td>
+                    <td class="p-4 text-emerald-400 font-bold">${rowData.innervation}</td>
                 `;
-                document.getElementById('qa-audio-btn').onclick = null;
-                return;
+                tableBody.appendChild(elementRow);
+            });
+        }
+
+        // 10. Flashcard Mechanical Flip Controllers
+        function executeCardFlipAction() {
+            document.getElementById('flashcard-physics-anchor').classList.toggle('flipped-state');
+        }
+
+        function drawNextSRSCard() {
+            document.getElementById('flashcard-physics-anchor').classList.remove('flipped-state');
+            const arrayKeys = Object.keys(coreAnatomyDataset);
+            const randomKey = arrayKeys[Math.floor(Math.random() * arrayKeys.length)];
+            const chosenObj = coreAnatomyDataset[randomKey];
+
+            const interactiveModes = [
+                { category: "CRITICAL PATHWAY INQUIRY", question: `Specify the neural pathway and spinal root supply fibers regulating the [${chosenObj.name}] system.`, answer: chosenObj.innervation },
+                { category: "ORIGIN PROFILE CHALLENGE", question: `Where is the localized osseous landmark area where [${chosenObj.name}] initiates its origin?`, answer: chosenObj.origin },
+                { category: "CLINICAL CORE CORRELATION", question: `Identify the target muscle matching this board vignette scenario: "${chosenObj.clinical}"`, answer: chosenObj.name }
+            ];
+            const activeProfile = interactiveModes[Math.floor(Math.random() * interactiveModes.length)];
+
+            setTimeout(() => {
+                document.getElementById('flash-front-badge').innerText = activeProfile.category;
+                document.getElementById('flash-front-main-text').innerText = activeProfile.question;
+                document.getElementById('flash-back-main-text').innerText = activeProfile.answer;
+            }, 180);
+        }
+
+        // 11. Boards Exam core implementation loops
+        let currentActiveQuizKey = "";
+        function generateQuizChallenge() {
+            const masterKeys = Object.keys(coreAnatomyDataset);
+            currentActiveQuizKey = masterKeys[Math.floor(Math.random() * masterKeys.length)];
+            const quizSubject = coreAnatomyDataset[currentActiveQuizKey];
+
+            const questionFormats = [
+                `A patient presents with specific structural impairment mapped precisely to this execution profile: "${quizSubject.action}". Identify the targeted muscle framework structural component.`,
+                `During an anatomical review session, you are asked to locate the muscle whose functional model corresponds to this dataset trace: "${quizSubject.origin}". Identify the target.`
+            ];
+
+            document.getElementById('quiz-question-prompt-text').innerText = questionFormats[Math.floor(Math.random() * questionFormats.length)];
+            
+            const choicesContainer = document.getElementById('quiz-choices-dock');
+            choicesContainer.innerHTML = '';
+
+            const optionsPool = [...masterKeys].sort(() => 0.5 - Math.random());
+            optionsPool.forEach(optionKey => {
+                const choiceBtn = document.createElement('button');
+                choiceBtn.className = "w-full text-left p-3.5 bg-slate-900 border border-slate-800 rounded-xl font-semibold text-xs text-slate-300 hover:border-slate-700 hover:bg-slate-950 transition cursor-pointer";
+                choiceBtn.innerText = `• ${coreAnatomyDataset[optionKey].name}`;
+                choiceBtn.onclick = () => verifyQuizSubmission(optionKey);
+                choicesContainer.appendChild(choiceBtn);
+            });
+
+            document.getElementById('quiz-feedback-banner').classList.add('hidden');
+            document.getElementById('quiz-active-viewport').classList.remove('hidden');
+        }
+
+        function verifyQuizSubmission(selectedOptionKey) {
+            const banner = document.getElementById('quiz-feedback-banner');
+            banner.classList.remove('hidden', 'bg-emerald-500/10', 'text-emerald-400', 'border-emerald-500/20', 'bg-rose-500/10', 'text-rose-400', 'border-rose-500/20');
+            banner.className = "text-xs font-bold p-3.5 rounded-xl text-center shadow-xs border mt-3 animate-fade-in";
+            
+            if (selectedOptionKey === currentActiveQuizKey) {
+                banner.innerText = "🎉 Exceptional Mapping! Your choice perfectly resolves the physiological configuration criteria metrics.";
+                banner.classList.add('bg-emerald-500/10', 'text-emerald-400', 'border-emerald-500/20');
+            } else {
+                banner.innerText = `❌ Diagnostic Discrepancy. The metrics analyzed route directly back to the ${coreAnatomyDataset[currentActiveQuizKey].name} track framework.`;
+                banner.classList.add('bg-rose-500/10', 'text-rose-400', 'border-rose-500/20');
+            }
+        }
+
+        // 12. Knowledge Desk Consult Processing Router
+        function handleConsultQuery() {
+            const textInput = document.getElementById('qa-input-field').value.trim().toLowerCase();
+            const displayFrame = document.getElementById('qa-result-box');
+            const displayText = document.getElementById('qa-result-text');
+
+            if (!textInput) return;
+
+            let finalResolutionStr = "";
+            for (const item of offlineConsultationDirectory) {
+                const parsedTrigger = item.keywords.some(k => textInput.includes(k));
+                if (parsedTrigger) {
+                    finalResolutionStr = item.answer;
+                    break;
+                }
             }
 
-            // Sort results by structural query weight matching
-            matches.sort((a, b) => b.weight - a.weight);
-            const bestMatch = dataMatrix[matches[0].key];
+            if (!finalResolutionStr) {
+                finalResolutionStr = "🔍 Inquire Specification Boundary Range Profile Incomplete.\n\nThe search string could not be verified locally. Please request insights explicitly regarding 'Winging Scapula deficits', 'Rotator Cuff anatomy', 'Borders and Angles matrix definitions', or 'Coracoid Process anchors'.";
+            }
 
-            outputBox.innerHTML = `
-                <p class="text-slate-900 font-bold text-sm">💡 Matrix Match Confirmed: <span class="text-blue-600">${bestMatch.name}</span></p>
-                <div class="mt-2 space-y-1.5 border-l-2 border-blue-500 pl-3 py-0.5 bg-slate-50/50 rounded-r-lg p-2">
-                    <p><strong>Origin:</strong> ${bestMatch.origin}</p>
-                    <p><strong>Insertion:</strong> ${bestMatch.insertion}</p>
-                    <p><strong>Innervation:</strong> ${bestMatch.innervation}</p>
-                    <p><strong>Primary Action:</strong> ${bestMatch.action}</p>
-                </div>
-            `;
-
-            // Bind generated text dynamically to text-to-speech synthesis button
-            document.getElementById('qa-audio-btn').onclick = () => {
-                if (!('speechSynthesis' in window)) return;
-                window.speechSynthesis.cancel();
-                const textToSpeak = `Report match verified for ${bestMatch.name}. Origin: ${bestMatch.origin}. Insertion: ${bestMatch.insertion}. Innervation: ${bestMatch.innervation}. Action: ${bestMatch.action}`;
-                const utterance = new SpeechSynthesisUtterance(textToSpeak);
-                utterance.rate = 0.9;
-                window.speechSynthesis.speak(utterance);
-            };
+            displayText.innerText = finalResolutionStr;
+            displayFrame.classList.remove('hidden');
         }
+
+        function runPreloadedQuery(text) {
+            document.getElementById('qa-input-field').value = text;
+            handleConsultQuery();
+        }
+
+        // APP INITIALIZATION CYCLES LIFELOOP
+        window.addEventListener('DOMContentLoaded', () => {
+            buildMuscleDockPills();
+            constructGlobalMatrixTableRows();
+            drawNextSRSCard();
+        });
     </script>
 </body>
 </html>
